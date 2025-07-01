@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui"
+    lang="pt-BR">
+<h:head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agendamento de Consultas</title>
+    <script type="text/javascript">
+        function handleSaveSuccess() {
+            document.getElementById('scheduleForm:clinica').selectedIndex = 0;
+            document.getElementById('scheduleForm:medico').selectedIndex = 0;
+            document.getElementById('scheduleForm:sala').selectedIndex = 0;
+            document.getElementById('scheduleForm:data_input').value = '';
+            document.getElementById('scheduleForm:horario_input').value = '';
+            document.getElementById('scheduleForm:paciente_input').value = '';
+            document.getElementById('scheduleForm:observacoes').value = '';
+        }
+    </script><h:outputStylesheet>
+        .schedule-panel {
+            margin: 20px;
+        }
+        .ui-panel-content {
+            padding: 1em;
+        }
+
+        .consultas-table {
+            margin-top: 10px;
+            width: 100%;
+        }
+        .status-actions {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            justify-content: center;
+        }
+        .action-button {
+            margin-left: 5px;
+        }
+        .ui-message-error {
+            margin: 5px 0;
+        }
+        .ui-message-success {
+            margin: 5px 0;
+            background-color: #c8e6c9 !important;
+        }
+        .selected-datetime {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .selected-datetime h3 {
+            margin: 0;
+            color: #495057;
+        }
+        .medico-indisponivel {
+            color: #dc3545;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        
+        .unavailable, .unavailable2 {
+            background-color: #ff9999 !important;
+            color: #800000 !important;
+        }
+        /* Aplica ao input do autocomplete quando o componente pai tem a classe unavailable */
+        .medicos-autocomplete.unavailable {
+            background-color: #ff9999 !important;
+            color: #800000 !important;
+        }
+
+        .amarelo-autocomplete .ui-autocomplete-input {
+            background-color: #fff9b1 !important;
+        }
+
+        .unavailable2 .ui-autocomplete-input {
+            background-color: #ff9999 !important;
+            color: #800000 !important;
+        }
+        /* Remove background from .unavailable2 itself if needed */
+        .unavailable2 {
+            background-color: unset !important;
+            color: unset !important;
+        }
+
+    </h:outputStylesheet>
+    <style type="text/css">
+        .dynamic-info {
+            margin-top: 5px;
+            padding: 5px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #495057;
+        }
+    </style>
+</h:head>
+<h:body>
+    <ui:include src="/WEB-INF/templates/menu.xhtml" />
+      <p:messages id="msgs" showDetail="true" closable="true">
+        <p:autoUpdate />
+    
+	  </p:messages>    
+	  
+	  
+	  <p:panel header="Agendamento de Consultas">        
+    
+    			<!-- 
+    			<h:form id="datetimeForm">            
+
+    			<p:outputPanel id="datetime-panel">
+                
+                <p:outputPanel rendered="#{not empty agendaController.dynamicDateTime}">
+                    <div class="selected-datetime">
+                        <h3>Horário selecionado: 
+                            <h:outputText id="datetime-display" value="#{agendaController.dynamicDateTime}" />
+                        </h3>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+
+            <p:outputPanel id="horario">
+                <p:outputPanel rendered="#{not empty agendaController.selectedTime}">
+                    <div class="selected-datetime">
+                        <h3>Horário: 
+                            <h:outputText value="#{agendaController.selectedTime}" />
+                        </h3>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+
+            <p:outputPanel id="medico-panel">
+                <p:outputPanel rendered="#{not empty agendaController.dynamicSelectedMedico}">
+                    <div class="selected-datetime">
+                        <h3>Médico selecionado: 
+                            <h:outputText id="medico-display" value="#{agendaController.dynamicSelectedMedico}" />
+                        </h3>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+            
+            <p:outputPanel id="medicos-indisponiveis-panel">
+                <p:outputPanel rendered="#{not empty agendaController.dynamicDateTime and not empty agendaController.medicosIndisponiveisNomes}">
+                    <div class="selected-datetime">
+                        <h3>Médicos indisponíveis no horário #{agendaController.dynamicDateTime}:</h3>
+                        <ui:repeat value="#{agendaController.medicosIndisponiveisNomes}" var="medicoNome">
+                            <p class="medico-indisponivel">
+                                <h:outputText value="#{medicoNome}" />
+                            </p>
+                        </ui:repeat>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+            
+            <p:outputPanel id="clinica-panel">
+                <p:outputPanel rendered="#{not empty agendaController.dynamicSelectedClinica}">
+                    <div class="selected-datetime">
+                        <h3>Clínica selecionada: 
+                            <h:outputText id="clinica-display" value="#{agendaController.dynamicSelectedClinica}" />
+                        </h3>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+
+            <p:outputPanel id="sala-panel">
+                <p:outputPanel rendered="#{not empty agendaController.dynamicSelectedSala}">
+                    <div class="selected-datetime">
+                        <h3>Sala selecionada: 
+                            <h:outputText id="sala-display" value="#{agendaController.dynamicSelectedSala}" />
+                        </h3>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+
+            <p:outputPanel id="paciente-panel">
+                <p:outputPanel rendered="#{not empty agendaController.dynamicSelectedPaciente}">
+                    <div class="selected-datetime">
+                        <h3>Paciente selecionado: 
+                            <h:outputText id="paciente-display" value="#{agendaController.dynamicSelectedPaciente}" />
+                        </h3>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+            
+            <p:outputPanel id="pacientes-indisponiveis-panel">
+                <p:outputPanel rendered="#{not empty agendaController.dynamicDateTime and not empty agendaController.pacientesIndisponiveisNomes}">
+                    <div class="selected-datetime">
+                        <h3>Pacientes indisponíveis no horário #{agendaController.dynamicDateTime}:</h3>
+                        <ui:repeat value="#{agendaController.pacientesIndisponiveisNomes}" var="pacienteNome">
+                            <p class="medico-indisponivel">
+                                <h:outputText value="#{pacienteNome}" />
+                            </p>
+                        </ui:repeat>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+            
+            <p:outputPanel id="salas-indisponiveis-panel">
+                <p:outputPanel rendered="#{not empty agendaController.dynamicDateTime and not empty agendaController.salasIndisponiveisNomes}">
+                    <div class="selected-datetime">
+                        <h3>Salas indisponíveis no horário #{agendaController.dynamicDateTime}:</h3>
+                        <ui:repeat value="#{agendaController.salasIndisponiveisNomes}" var="salaNome">
+                            <p class="medico-indisponivel">
+                                <h:outputText value="#{salaNome}" />
+                            </p>
+                        </ui:repeat>
+                    </div>
+                </p:outputPanel>
+            </p:outputPanel>
+        </h:form>
+        -->
+        <div class="p-grid">
+            <div class="p-col-6">
+                <!-- Calendário e Formulário de Agendamento -->
+                <p:panel header="Nova Consulta" styleClass="schedule-panel">
+                    <h:form id="scheduleForm">
+                        <p:panelGrid columns="2" layout="grid" styleClass="ui-fluid">
+                            <p:outputLabel for="clinica" value="Clínica:" />
+                            <p:selectOneMenu id="clinica" value="#{agendaController.selectedClinicaId}" 
+                                           required="true">
+                                <f:selectItem itemLabel="Selecione uma clínica" itemValue="" />
+                                <f:selectItems value="#{agendaController.clinicas}" 
+                                             var="clinica" 
+                                             itemLabel="#{clinica.nome}" 
+                                             itemValue="#{clinica.id}" />
+                                <!-- <p:ajax update="scheduleForm:medico scheduleForm:sala scheduleForm:paciente,:datetimeForm:clinica-panel,:datetimeForm:pacientes-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel" -->
+                                     <p:ajax update="scheduleForm:medico scheduleForm:sala scheduleForm:paciente,:msgs"  
+                                       listener="#{agendaController.onClinicaChange}" />
+                            </p:selectOneMenu> 
+                            
+
+
+                            <p:outputLabel for="medico" value="Médico:" />                                
+                            <p:autoComplete id="medico"
+                                            value="#{agendaController.selectedMedico}"
+                                            completeMethod="#{agendaController.buscarMedicosDaClinica}" 
+                                            var="medico"
+                                            placeholder="Digite o nome do medico"
+                                            itemLabel="#{medico.nome}"
+                                            itemValue="#{medico}"
+                                            converter="medicoConverter"
+                                            dropdown="true"
+                                            forceSelection="true"
+                                            required="true"
+                                            cache="true"
+                                            emptyMessage="Nenhum médico encontrado"
+                                            scrollHeight="200"
+                                            disabled="#{empty agendaController.selectedClinicaId}"
+                                            panelStyleClass="custom-autocomplete-panel"
+                                            styleClass="#{agendaController.getMedicoInputUnavailableClass()}">
+                                <p:column styleClass="#{agendaController.getItemStyleClass(medico.nome)}">
+                                    <h:outputText value="#{medico.nome}" />
+                                </p:column>
+                                <p:ajax event="itemSelect"
+                                        listener="#{agendaController.onMedicoChange}"
+                                        update="horario,scheduleForm:medico,:msgs" />
+                                        <!-- update="horario,:datetimeForm:medico-panel,scheduleForm:medico,:datetimeForm:medicos-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:datetimeForm:datetime-panel,:msgs" />-->
+                                <p:ajax event="change"
+                                        listener="#{agendaController.onMedicoChange}"
+                                        update="horario,scheduleForm:medico,:msgs" />
+                                        <!-- update="horario,:datetimeForm:medico-panel,scheduleForm:medico,:datetimeForm:medicos-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:datetimeForm:datetime-panel,:msgs" />-->
+                            </p:autoComplete>
+
+                            
+                            
+                            <p:outputLabel for="sala" value="Sala:" />
+                            <p:autoComplete id="sala" 
+                                value="#{agendaController.selectedSala}"
+                                completeMethod="#{agendaController.buscarSalasDaClinica}"
+                                var="sala"
+                                itemLabel="#{sala.nome}"
+                                itemValue="#{sala}"
+                                converter="salaConverter"
+                                dropdown="true"
+                                forceSelection="true"
+                                required="true"
+                                cache="true"
+                                emptyMessage="Nenhuma sala encontrada"
+                                placeholder="Digite o nome da sala"
+                                requiredMessage="Selecione uma sala"
+                                scrollHeight="200"
+                                disabled="#{empty agendaController.selectedClinicaId}"
+                                panelStyleClass="custom-autocomplete-panel"
+                                styleClass="#{agendaController.getSalaInputUnavailableClass()}">
+                                <p:column styleClass="#{agendaController.getSalaItemStyleClass(sala.nome)}">
+                                    <h:outputText value="#{sala.nome}" />
+                                </p:column>
+                                <p:ajax event="itemSelect" 
+                                    listener="#{agendaController.onSalaChange}"
+                                    update=":msgs,scheduleForm:sala" />
+                                    <!-- update=":datetimeForm:sala-panel,:datetimeForm:salas-indisponiveis-panel,:datetimeForm:horario,:datetimeForm:datetime-panel,:msgs,scheduleForm:sala" />-->
+                                <p:ajax event="change" 
+                                    listener="#{agendaController.onSalaChange}"
+                                    update=":msgs,scheduleForm:sala" />
+                                   <!-- update=":datetimeForm:sala-panel,:datetimeForm:salas-indisponiveis-panel,:datetimeForm:horario,:datetimeForm:datetime-panel,:msgs,scheduleForm:sala" />-->
+                            </p:autoComplete>
+                            
+                            <p:outputLabel for="data" value="Data:" />                            
+                            <p:datePicker id="data" value="#{agendaController.selectedDate}" 
+                                        required="true" pattern="dd/MM/yyyy" 
+                                        mindate="#{agendaController.today}"
+                                        showTime="false"
+                                        keyboardInput="true"
+                                        converterMessage="Formato de data inválido. Use dd/MM/yyyy">
+                                <!--<p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:datetimeForm:datetime-panel,:datetimeForm:pacientes-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:msgs"--> 
+                                    <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:msgs"     
+                                        execute="@this" 
+                                        listener="#{agendaController.onDataChange}" 
+                                        event="dateSelect"
+                                        immediate="true"
+                                        process="@this" />
+                               <!-- <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:datetimeForm:datetime-panel,:datetimeForm:pacientes-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:msgs"--> 
+                                    <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:msgs" 
+                                        execute="@this" 
+                                        listener="#{agendaController.onDataChange}" 
+                                        event="change"
+                                        immediate="true"
+                                        process="@this" />
+                                <!-- <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:datetimeForm:datetime-panel,:datetimeForm:pacientes-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:msgs"--> 
+                                     <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:msgs" 
+                                        execute="@this" 
+                                        listener="#{agendaController.onDataChange}" 
+                                        event="keyup"
+                                        immediate="true"
+                                        process="@this" />
+                            </p:datePicker>
+                            
+                            <p:outputLabel for="horario" value="Horário:" />                            
+                            <p:calendar id="horario" 
+                                      value="#{agendaController.selectedTime}" 
+                                      pattern="HH:mm" 
+                                      timeOnly="true"
+                                      required="true"
+                                      keyboardInput="true"
+                                      hideOnDateTimeSelect="false"
+                                      showTime="true"
+                                      autoClose="false"
+                                      showButtonPanel="true"
+                                      converterMessage="Formato de hora inválido. Use HH:mm (24h)">
+                                <!-- <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:datetimeForm:datetime-panel,:datetimeForm:pacientes-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:msgs"--> 
+                                     <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:msgs" 
+                                        execute="@this" 
+                                        listener="#{agendaController.onDataChange}" 
+                                        event="dateSelect"
+                                        immediate="true"
+                                        process="@this" />
+                                <!-- <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:datetimeForm:datetime-panel,:datetimeForm:pacientes-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:msgs"--> 
+                                     <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:msgs" 
+                                        execute="@this" 
+                                        listener="#{agendaController.onDataChange}" 
+                                        event="change"
+                                        immediate="true"
+                                        delay="700"
+                                        process="@this" />
+                                <!-- <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:datetimeForm:datetime-panel,:datetimeForm:pacientes-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:msgs"--> 
+                                     <p:ajax update="horario,scheduleForm:medico,scheduleForm:paciente,scheduleForm:sala,:msgs" 
+                                        execute="@this" 
+                                        listener="#{agendaController.onDataChange}" 
+                                        event="keyup"
+                                        immediate="true"
+                                        process="@this" />
+                            </p:calendar>
+                            
+                            <p:outputLabel for="paciente" value="Paciente:" />                            
+                            <p:autoComplete id="paciente" 
+                                          value="#{agendaController.selectedPaciente}"
+                                          completeMethod="#{agendaController.completePaciente}"
+                                          var="paciente"
+                                          placeholder="Digite o nome do paciente"
+                                          itemLabel="#{paciente.nome}"
+                                          itemValue="#{paciente}"
+                                          converter="pacienteConverter"
+                                          dropdown="true"
+                                          forceSelection="true"
+                                          required="true"
+                                          cache="true"
+                                          emptyMessage="Nenhum paciente encontrado"
+                                          scrollHeight="200"
+                                          panelStyleClass="custom-autocomplete-panel"
+                                          styleClass="#{agendaController.getPacienteInputUnavailableClass()}">
+                                <p:column styleClass="#{agendaController.getPacienteItemStyleClass(paciente.nome)}">
+                                    <h:outputText value="#{paciente.nome}" />
+                                </p:column>
+                                <p:ajax event="itemSelect"
+                                        listener="#{agendaController.onPacienteChange}"
+                                        update=":msgs,scheduleForm:paciente" />
+                                        <!--update=":datetimeForm:paciente-panel,scheduleForm:paciente,:datetimeForm:pacientes-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:datetimeForm:datetime-panel,:msgs" />-->
+                                <p:ajax event="change"
+                                        listener="#{agendaController.onPacienteChange}"
+                                        update=":msgs,scheduleForm:paciente" />
+                                        <!-- update=":datetimeForm:paciente-panel,scheduleForm:paciente,:datetimeForm:pacientes-indisponiveis-panel,:datetimeForm:salas-indisponiveis-panel,:datetimeForm:datetime-panel,:msgs" />-->
+                            </p:autoComplete>
+
+                            <p:outputLabel for="observacoes" value="Observações:" />
+                            <p:inputTextarea id="observacoes" value="#{agendaController.observacoes}" 
+                                           rows="3" />
+                        </p:panelGrid>                        <p:commandButton value="Agendar" 
+                                       action="#{agendaController.salvarAgendamento}"
+                                       process="@form"
+                                       update=":scheduleForm :consultasForm:consultasTable :msgs"
+                                       icon="pi pi-calendar-plus"
+                                       styleClass="ui-button-success"
+                                       oncomplete="if (!args.validationFailed) handleSaveSuccess()"/>
+                    </h:form>
+                </p:panel>
+
+                <!-- Sistema de Atualização Automática -->
+                <p:panel header="Sistema de Atualização Automática" styleClass="schedule-panel">
+                    <h:form id="toggleForm">
+                        <div class="p-grid" style="margin-bottom: 10px;">
+                            <div class="p-col-12" style="display: flex; align-items: center; gap: 10px;">
+                                <p:commandButton id="toggleButton"
+                                               value="#{agendaController.sistemaAtualizacaoAtivo ? 'Desativar' : 'Ativar'} Sistema"
+                                               action="#{agendaController.toggleSistemaAtualizacao}"
+                                               update="@form"
+                                               styleClass="#{agendaController.sistemaAtualizacaoAtivo ? 'ui-button-danger' : 'ui-button-success'}"
+                                               style="width: auto;" />
+                                               
+                                <div id="statusMessage" 
+                                     style="padding: 8px 12px; border-radius: 4px; #{agendaController.sistemaAtualizacaoAtivo ? 'background-color: #c8e6c9;' : 'background-color: #ffcdd2;'}">
+                                    <h:outputText value="#{agendaController.sistemaAtualizacaoAtivo ? 'Sistema de atualização automática ATIVO' : 'Sistema de atualização automática INATIVO'}"
+                                                style="#{agendaController.sistemaAtualizacaoAtivo ? 'color: #2e7d32;' : 'color: #c62828;'}" />
+                                </div>
+                            </div>
+                        </div>
+                    </h:form>
+                </p:panel>
+
+                <!-- Sistema de Busca -->
+                <p:panel header="Buscar Agendamentos" styleClass="schedule-panel">
+                    <h:form id="searchForm">
+                        <div class="p-grid" style="margin-bottom: 10px;">
+                            <div class="p-col-12" style="display: flex; align-items: center; gap: 10px;">
+                                <!-- Primeiro Seletor - Tipo de Entidade -->
+                                <p:selectOneMenu id="searchEntityType" value="#{agendaController.searchEntityType}"
+                                               style="width: 150px;">
+                                    <f:selectItem itemLabel="Data/Hora" itemValue="data"/>
+                                    <f:selectItem itemLabel="Paciente" itemValue="paciente"/>
+                                    <f:selectItem itemLabel="Médico" itemValue="medico"/>
+                                    <f:selectItem itemLabel="Clínica" itemValue="clinica"/>
+                                    <p:ajax update="searchTypePanel searchInputPanel" 
+                                           listener="#{agendaController.onSearchEntityTypeChange}"/>
+                                </p:selectOneMenu>
+
+                                <!-- Segundo Seletor - Tipo de Busca -->
+                                <h:panelGroup id="searchTypePanel">
+                                    <!-- Seletor para Paciente -->
+                                    <p:selectOneMenu id="searchTypePaciente" value="#{agendaController.searchType}"
+                                                   style="width: 150px;"
+                                                   rendered="#{agendaController.searchEntityType eq 'paciente'}">
+                                        <f:selectItem itemLabel="Nome" itemValue="nome"/>
+                                        <f:selectItem itemLabel="CPF" itemValue="cpf"/>
+                                        <f:selectItem itemLabel="Telefone" itemValue="telefone"/>
+                                        <f:selectItem itemLabel="Endereço" itemValue="endereco"/>
+                                        <p:ajax update="searchInputPanel" listener="#{agendaController.clearSearch}"/>
+                                    </p:selectOneMenu>
+                                    
+                                    <!-- Seletor para Médico -->
+                                    <p:selectOneMenu id="searchTypeMedico" value="#{agendaController.searchType}"
+                                                   style="width: 150px;"
+                                                   rendered="#{agendaController.searchEntityType eq 'medico'}">
+                                        <f:selectItem itemLabel="Nome" itemValue="nome"/>
+                                        <f:selectItem itemLabel="CPF" itemValue="cpf"/>
+                                        <f:selectItem itemLabel="Endereço" itemValue="endereco"/>
+                                        <p:ajax update="searchInputPanel" listener="#{agendaController.clearSearch}"/>
+                                    </p:selectOneMenu>
+                                    
+                                    <!-- Seletor para Clínica -->
+                                    <p:selectOneMenu id="searchTypeClinica" value="#{agendaController.searchType}"
+                                                   style="width: 150px;"
+                                                   rendered="#{agendaController.searchEntityType eq 'clinica'}">
+                                        <f:selectItem itemLabel="Nome" itemValue="nome"/>
+                                        <f:selectItem itemLabel="CNPJ" itemValue="cnpj"/>
+                                        <f:selectItem itemLabel="Endereço" itemValue="endereco"/>
+                                        <p:ajax update="searchInputPanel" listener="#{agendaController.clearSearch}"/>
+                                    </p:selectOneMenu>
+                                </h:panelGroup>
+
+                                <!-- Campo de Busca -->
+                                <h:panelGroup id="searchInputPanel" style="flex-grow: 1;">
+                                    <!-- Data/Hora -->
+                                    <p:calendar id="searchDate" 
+                                              value="#{agendaController.searchDate}"
+                                              pattern="dd/MM/yyyy"
+                                              rendered="#{agendaController.searchEntityType eq 'data'}"
+                                              placeholder="Selecione a data">
+                                        <p:ajax event="dateSelect" listener="#{agendaController.filterAgendamentos}"
+                                               update=":consultasForm:consultasTable"/>
+                                        <p:ajax event="change" listener="#{agendaController.filterAgendamentos}"
+                                               update=":consultasForm:consultasTable"/>
+                                    </p:calendar>
+
+                                    <p:calendar id="searchTime" 
+                                              value="#{agendaController.searchTime}"
+                                              pattern="HH:mm"
+                                              timeOnly="true"
+                                              rendered="#{agendaController.searchEntityType eq 'data' or (agendaController.searchEntityType eq 'clinica' and agendaController.searchType eq 'horario')}"
+                                              placeholder="Selecione o horário"
+                                              style="margin-left: 10px;">
+                                        <p:ajax event="dateSelect" listener="#{agendaController.filterAgendamentos}"
+                                               update=":consultasForm:consultasTable"/>
+                                        <p:ajax event="change" listener="#{agendaController.filterAgendamentos}"
+                                               update=":consultasForm:consultasTable"/>
+                                    </p:calendar>
+
+                                    <!-- Campo de texto para outras buscas -->
+                                    <p:inputText id="searchText"
+                                               value="#{agendaController.searchText}"
+                                               rendered="#{agendaController.searchEntityType ne 'data' and not (agendaController.searchEntityType eq 'clinica' and agendaController.searchType eq 'horario')}"
+                                               placeholder="Digite para buscar..."
+                                               style="width: 100%;">
+                                        <p:ajax event="keyup" listener="#{agendaController.filterAgendamentos}"
+                                               update=":consultasForm:consultasTable"/>
+                                    </p:inputText>
+                                </h:panelGroup>
+
+                                <!-- Botão Limpar -->
+                                <p:commandButton value="Limpar" 
+                                               action="#{agendaController.clearSearch}"
+                                               update="searchForm :consultasForm:consultasTable"
+                                               icon="pi pi-times"/>
+                                
+                                <!-- Seletor de Ordenação -->
+                                <p:outputLabel value="Ordenar por:" style="font-weight: bold; margin-left: 20px;" />
+                                <p:selectOneMenu value="#{agendaController.ordenacao}"
+                                               style="width: 200px;">
+                                    <f:selectItem itemLabel="Data (mais recente primeiro)" itemValue="data_recente"/>
+                                    <f:selectItem itemLabel="Data (mais antiga primeiro)" itemValue="data_antiga"/>
+                                    <f:selectItem itemLabel="Clínica" itemValue="clinica"/>
+                                    <f:selectItem itemLabel="Médico" itemValue="medico"/>
+                                    <f:selectItem itemLabel="Paciente" itemValue="paciente"/>
+                                    <p:ajax update=":consultasForm:consultasTable" 
+                                           listener="#{agendaController.onOrdenacaoChange}"/>
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+                    </h:form>
+                </p:panel>
+            </div>
+
+            <div class="p-col-6">
+                <!-- Lista de Consultas -->
+                <p:panel header="Consultas Agendadas" styleClass="schedule-panel">
+                    <h:form id="consultasForm">                        
+                        <p:dataTable id="consultasTable" 
+                                widgetVar="consultasTable"
+                                var="consulta" 
+                                value="#{agendaController.agendasFiltradas}"
+                                rows="10" 
+                                paginator="true"
+                                paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                                currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
+                                rowsPerPageTemplate="5,10,15"
+                                emptyMessage="Nenhuma consulta encontrada"
+                                lazy="false"
+                                styleClass="consultas-table">
+                            <p:ajax event="page" ignoreAutoUpdate="true" />
+                            <p:autoUpdate />
+                            <p:column headerText="Data/Hora">
+                                <h:outputText value="#{consulta.dataHora}">
+                                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="localDateTime"/>
+                                </h:outputText>
+                            </p:column>
+
+                            <p:column headerText="Paciente">
+                                <h:outputText value="#{consulta.paciente.nome}" />
+                            </p:column>
+
+                            <p:column headerText="Médico">
+                                <h:outputText value="#{consulta.medico.nome}" />
+                            </p:column>                            <p:column headerText="Clínica/Sala">
+                                <h:outputText value="#{consulta.clinica.nome} - #{consulta.sala.nome}" />
+                            </p:column>                            <p:column headerText="Status">
+                                <div class="status-actions">
+                                    <p:tag styleClass="#{consulta.status.cssClass}" 
+                                           value="#{consulta.status.descricao}" 
+                                           severity="#{consulta.status.severity}" />                                    <p:commandButton icon="pi pi-check"
+                                                   action="#{agendaController.finalizarConsulta(consulta)}"
+                                                   update=":consultasForm:consultasTable :msgs @form"
+                                                   styleClass="ui-button-success rounded-button action-button"
+                                                   rendered="#{consulta.status.name() eq 'AGENDADO'}"
+                                                   title="Finalizar Consulta"
+                                                   process="@this">
+                                        <p:confirm header="Confirmação" 
+                                                  message="Deseja finalizar esta consulta?" 
+                                                  icon="pi pi-exclamation-triangle" />
+                                    </p:commandButton>                                    <p:commandButton icon="pi pi-times"
+                                                   action="#{agendaController.cancelarConsulta(consulta)}"
+                                                   update=":consultasForm:consultasTable :msgs @form"
+                                                   styleClass="ui-button-warning rounded-button action-button"
+                                                   rendered="#{consulta.status.name() eq 'AGENDADO'}"
+                                                   title="Cancelar Consulta"
+                                                   process="@this">
+                                        <p:confirm header="Confirmação" 
+                                                  message="Deseja cancelar esta consulta?" 
+                                                  icon="pi pi-exclamation-triangle" />
+                                    </p:commandButton>
+                                    
+                                </div>
+                            </p:column>                            
+                            <p:column headerText="Ações">                                
+                            <div class="status-actions">
+                                    <p:commandButton icon="pi pi-eye" 
+                     oncomplete="PF('detalhesDialog').show()"
+                     update=":detalhesForm"
+                     styleClass="ui-button-info rounded-button"
+                     title="Visualizar Detalhes">
+        <f:setPropertyActionListener value="#{consulta}" 
+                                   target="#{agendaController.selectedConsulta}" />
+    </p:commandButton>
+    
+    <p:commandButton icon="pi pi-pencil"
+                     action="#{agendaController.prepararEdicao(consulta)}"
+                     oncomplete="PF('editDialog').show()"
+                     update=":editForm"
+                     styleClass="ui-button-warning rounded-button"
+                     title="Editar Agendamento" />                                    
+                     			   <p:commandButton icon="pi pi-trash" 
+                                                   action="#{agendaController.excluirConsulta(consulta)}"
+                                                   update=":consultasForm:consultasTable :msgs @form"
+                                                   styleClass="ui-button-danger rounded-button action-button"
+                                                   title="Excluir Consulta">
+                                        <p:confirm header="Confirmação" 
+                                                  message="Deseja excluir esta consulta?" 
+                                                  icon="pi pi-exclamation-triangle" />
+                                    </p:commandButton>
+                                </div>
+                            </p:column>
+                        </p:dataTable>
+                    </h:form>
+                </p:panel>
+            </div>
+        </div>
+    </p:panel>
+
+    <!-- Dialog de Detalhes da Consulta -->
+    <p:dialog header="Detalhes da Consulta" widgetVar="detalhesDialog" 
+              modal="true" showEffect="fade" hideEffect="fade" width="500">
+        <h:form id="detalhesForm">
+            <p:panelGrid columns="2" columnClasses="label,value" rendered="#{not empty agendaController.selectedConsulta}">
+                <h:outputText value="Paciente:" />
+                <h:outputText value="#{agendaController.selectedConsulta.paciente.nome}" />                <h:outputText value="Médico:" />
+                <h:outputText value="#{agendaController.selectedConsulta.medico.nome}" />
+
+                <h:outputText value="Clínica:" />
+                <h:outputText value="#{agendaController.selectedConsulta.clinica.nome}" />
+
+                <h:outputText value="Sala:" />
+                <h:outputText value="#{agendaController.selectedConsulta.sala.nome}" />
+
+                <h:outputText value="Data/Hora Início:" />
+                <h:outputText value="#{agendaController.selectedConsulta.dataHora}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="localDateTime"/>
+                </h:outputText>
+
+                <h:outputText value="Data/Hora Fim:" />
+                <h:outputText value="#{agendaController.selectedConsulta.dataHoraFim}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="localDateTime"/>
+                </h:outputText>
+
+                <h:outputText value="Status:" />
+                <p:tag value="#{agendaController.selectedConsulta.status.descricao}"
+                       severity="#{agendaController.selectedConsulta.status.severity}"
+                       styleClass="#{agendaController.selectedConsulta.status.cssClass}" />
+
+                <h:outputText value="Observações:" />
+                <h:outputText value="#{agendaController.selectedConsulta.observacoes}" 
+                             rendered="#{not empty agendaController.selectedConsulta.observacoes}"/>
+                <h:outputText value="Nenhuma observação" 
+                             rendered="#{empty agendaController.selectedConsulta.observacoes}"/>
+            </p:panelGrid>
+        </h:form>
+    </p:dialog>
+
+    <!-- Dialog para Editar Consulta -->
+<p:dialog header="Editar Consulta" widgetVar="editDialog" 
+          modal="true" showEffect="fade" hideEffect="fade" 
+          width="500">
+    <h:form id="editForm">
+        <!-- Para status AGENDADO - campos editáveis -->
+        <p:panelGrid columns="2" columnClasses="label,value" rendered="#{not empty agendaController.selectedConsulta and agendaController.selectedConsulta.status.name() eq 'AGENDADO'}">
+            <h:outputText value="Paciente:" />
+            <h:outputText value="#{agendaController.selectedConsulta.paciente.nome}" />
+
+            <h:outputText value="Clínica:" />
+            <h:outputText value="#{agendaController.selectedConsulta.clinica.nome}" />
+
+            <p:outputLabel for="editMedicoId" value="Médico:" />
+            <p:autoComplete id="editMedicoId"
+                          value="#{agendaController.editMedico}"
+                          completeMethod="#{agendaController.getMedicosDisponiveisParaEdicao}"
+                          var="medico"
+                          itemLabel="#{medico.nome}"
+                          itemValue="#{medico}"
+                          converter="medicoConverter"
+                          dropdown="true"
+                          forceSelection="true"
+                          required="true"
+                          cache="true"
+                          emptyMessage="Nenhum médico encontrado"
+                          scrollHeight="200"
+                          panelStyleClass="custom-autocomplete-panel"
+                          disabled="#{agendaController.isMedicoEditDisabled()}"
+                          placeholder="#{agendaController.getMedicoEditPlaceholder()}"
+                          styleClass="#{agendaController.getMedicoEditInputClass()}">
+                <p:column>
+                    <h:outputText value="#{medico.nome}" />
+                </p:column>
+                <p:ajax event="itemSelect"
+                        update=":editForm :msgs" />
+                <p:ajax event="change"
+                        update=":editForm :msgs" />
+            </p:autoComplete>
+
+            <p:outputLabel for="editData" value="Data/Hora:" />
+            <p:calendar id="editData" 
+                      value="#{agendaController.editDataHora}" 
+                      pattern="dd/MM/yyyy HH:mm"
+                      showTime="true"
+                      required="true">
+                <p:ajax event="dateSelect" 
+                       update=":editForm:editMedicoId :editForm:editSalaId :msgs" 
+                       listener="#{agendaController.updateDynamicEditDateTime}" />
+                <p:ajax event="change"
+                       update=":editForm:editMedicoId :editForm:editSalaId :msgs"
+                       listener="#{agendaController.updateDynamicEditDateTime}" />
+            </p:calendar>
+
+            <p:outputLabel for="editSalaId" value="Sala:" />
+            <p:autoComplete id="editSalaId"
+                          value="#{agendaController.editSala}"
+                          completeMethod="#{agendaController.buscarSalasDisponiveisParaEdicao}"
+                          var="sala"
+                          itemLabel="#{sala.nome}"
+                          itemValue="#{sala}"
+                          converter="salaConverter"
+                          dropdown="true"
+                          forceSelection="true"
+                          required="true"
+                          cache="true"
+                          emptyMessage="Nenhuma sala encontrada"
+                          scrollHeight="200"
+                          panelStyleClass="custom-autocomplete-panel"
+                          disabled="#{agendaController.isSalaEditDisabled()}"
+                          placeholder="#{agendaController.getSalaEditPlaceholder()}"
+                          styleClass="#{agendaController.getSalaEditInputClass()}">
+                <p:column>
+                    <h:outputText value="#{sala.nome}" />
+                </p:column>
+                <p:ajax event="itemSelect"
+                        update=":editForm :msgs"
+                        listener="#{agendaController.onSalaEditChange}" />
+                <p:ajax event="change"
+                        update=":editForm :msgs"
+                        listener="#{agendaController.onSalaEditChange}" />
+            </p:autoComplete>
+
+            <p:outputLabel for="editObservacoesId" value="Observações:" />
+            <p:inputTextarea id="editObservacoesId" 
+                          value="#{agendaController.editObservacoes}" />
+        </p:panelGrid>
+
+        <!-- Para status não-AGENDADO - igual ao visualizador mas com observações editável -->
+        <p:panelGrid columns="2" columnClasses="label,value" rendered="#{not empty agendaController.selectedConsulta and agendaController.selectedConsulta.status.name() ne 'AGENDADO'}">
+            <h:outputText value="Paciente:" />
+            <h:outputText value="#{agendaController.selectedConsulta.paciente.nome}" />
+            
+            <h:outputText value="Médico:" />
+            <h:outputText value="#{agendaController.selectedConsulta.medico.nome}" />
+
+            <h:outputText value="Clínica:" />
+            <h:outputText value="#{agendaController.selectedConsulta.clinica.nome}" />
+
+            <h:outputText value="Sala:" />
+            <h:outputText value="#{agendaController.selectedConsulta.sala.nome}" />
+
+            <h:outputText value="Data/Hora Início:" />
+            <h:outputText value="#{agendaController.selectedConsulta.dataHora}">
+                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="localDateTime"/>
+            </h:outputText>
+
+            <h:outputText value="Data/Hora Fim:" />
+            <h:outputText value="#{agendaController.selectedConsulta.dataHoraFim}" 
+                        rendered="#{not empty agendaController.selectedConsulta.dataHoraFim}">
+                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="localDateTime"/>
+            </h:outputText>
+            <h:outputText value="#{agendaController.selectedConsulta.dataHora.plusMinutes(agendaController.selectedConsulta.medico.tempoConsulta)}" 
+                        rendered="#{empty agendaController.selectedConsulta.dataHoraFim and not empty agendaController.selectedConsulta.dataHora and not empty agendaController.selectedConsulta.medico.tempoConsulta}">
+                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="localDateTime"/>
+            </h:outputText>
+            <h:outputText value="N/A" 
+                        rendered="#{empty agendaController.selectedConsulta.dataHoraFim and (empty agendaController.selectedConsulta.dataHora or empty agendaController.selectedConsulta.medico.tempoConsulta)}"/>
+
+            <h:outputText value="Status:" />
+            <p:tag value="#{agendaController.selectedConsulta.status.descricao}"
+                   severity="#{agendaController.selectedConsulta.status.severity}"
+                   styleClass="#{agendaController.selectedConsulta.status.cssClass}" />
+
+            <h:outputText value="Observações:" />
+            <p:inputTextarea id="editObservacoesId2" 
+                          value="#{agendaController.editObservacoes}" />
+        </p:panelGrid>
+
+        <div class="dialog-footer">
+            <p:commandButton value="Salvar" 
+                           action="#{agendaController.salvarEdicao}"
+                           update=":consultasForm:consultasTable :msgs @form"
+                           oncomplete="if (!args.validationFailed) PF('editDialog').hide()"
+                           styleClass="ui-button-success" />
+            <p:commandButton value="Cancelar"
+                           onclick="PF('editDialog').hide()"
+                           type="button"
+                           styleClass="ui-button-secondary" />
+        </div>
+    </h:form>
+</p:dialog>
+
+    <!-- Dialog de Confirmação -->
+    <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true" width="350">
+        <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+        <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times"/>
+    </p:confirmDialog>
+
+    <!-- Polling automático para verificar mudanças nos agendamentos -->
+	<h:panelGrid rendered="#{agendaController.sistemaAtualizacaoAtivo}">
+	    <h:form id="pollingForm">
+	       <p:poll interval="60"
+	               widgetVar="poll"
+	               listener="#{agendaController.verificarMudancasEAtualizar}"
+	               update=":consultasForm:consultasTable"
+	               autoStart="true"
+	               global="false"
+	               async="true" />
+	    </h:form>
+	</h:panelGrid>
+</h:body>
+</html>

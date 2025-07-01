@@ -1,0 +1,15 @@
+src/main/resources/email-config.properties
+src/main/resources/db-prod.properties 
+
+target/
+*.war
+*.jar
+
+.settings/
+.project
+.classpath
+
+*.log
+
+*.tmp
+*.temp 

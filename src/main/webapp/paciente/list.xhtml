@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui"
+    lang="pt-BR">
+<h:head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestão de Pacientes</title>    <h:outputStylesheet>
+        th, td {
+            text-align: center;
+        }
+        h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            -webkit-box-sizing:border-box;
+            -moz-box-sizing: border-box;
+        }
+        .ui-toolbar-group-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .ui-toolbar-group-left .ui-button {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .search-input-container {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+            vertical-align: middle;
+            width: 200px;
+        }
+        .ui-toolbar .ui-selectonemenu {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .search-panel {
+            margin-bottom: 1em;
+            display: flex;
+            align-items: center;
+            gap: 1em;
+        }
+        .search-input {
+            width: 100%;
+        }
+        .p-toolbar-group-left {
+            width: 100%;
+        }
+        .button-container {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .action-button {
+            margin-right: 5px;
+            display: inline-block;
+        }
+    </h:outputStylesheet>
+</h:head>
+<h:body>
+    <ui:include src="/WEB-INF/templates/menu.xhtml" />
+    
+    <p:messages id="msgs" showDetail="true" closable="true">
+        <p:autoUpdate />
+    </p:messages>
+
+    <p:panel header="Gerenciamento de Pacientes">        <h:form id="searchForm">            <p:toolbar>
+                <p:toolbarGroup styleClass="ui-toolbar-group-left">
+                    <p:selectOneMenu id="searchType" value="#{pacienteController.searchType}">
+                        <f:selectItem itemLabel="Nome" itemValue="nome"/>
+                        <f:selectItem itemLabel="CPF" itemValue="cpf"/>
+                        <f:selectItem itemLabel="Telefone" itemValue="telefone"/>
+                        <f:selectItem itemLabel="Endereço" itemValue="endereco"/>
+                        <p:ajax update="searchPanel" listener="#{pacienteController.clearSearch}"/>
+                    </p:selectOneMenu>
+                    
+                    <div class="search-input-container">
+                        <h:panelGroup id="searchPanel">
+                            <p:inputText id="searchInputNome" value="#{pacienteController.searchText}"
+                                       rendered="#{pacienteController.searchType eq 'nome' or pacienteController.searchType eq 'endereco'}"
+                                       placeholder="Digite para buscar..."
+                                       styleClass="search-input">
+                                <p:ajax event="keyup" listener="#{pacienteController.filterPacientes}"
+                                       update=":listForm:pacientesTable"/>
+                            </p:inputText>
+                            <p:inputText id="searchInputCpf" value="#{pacienteController.searchText}"
+                                       rendered="#{pacienteController.searchType eq 'cpf'}"
+                                       placeholder="Digite o CPF (apenas números)"
+                                       styleClass="search-input">
+                                <p:ajax event="keyup" listener="#{pacienteController.filterPacientes}"
+                                       update=":listForm:pacientesTable"/>
+                            </p:inputText>
+                            <p:inputText id="searchInputTel" value="#{pacienteController.searchText}"
+                                       rendered="#{pacienteController.searchType eq 'telefone'}"
+                                       placeholder="Digite o telefone (apenas números)"
+                                       styleClass="search-input">
+                                <p:ajax event="keyup" listener="#{pacienteController.filterPacientes}"
+                                       update=":listForm:pacientesTable"/>
+                            </p:inputText>
+                        </h:panelGroup>
+                    </div>
+                    
+                    <p:commandButton value="Limpar" 
+                                   action="#{pacienteController.clearSearch}"
+                                   update="searchPanel :listForm:pacientesTable"
+                                   icon="pi pi-times"/>
+                    
+                    <p:commandButton value="Novo Paciente" 
+                                   onclick="PF('novoPacienteDialog').show()" 
+                                   icon="pi pi-plus" 
+                                   styleClass="ui-button-success"/>
+                </p:toolbarGroup>
+            </p:toolbar>
+        </h:form>
+
+        <h:form id="listForm">
+            <p:dataTable id="pacientesTable" var="paciente" value="#{pacienteController.pacientesExibidos}"
+                         lazy="false"
+                         emptyMessage="Nenhum paciente encontrado" rows="10" paginator="true"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} 
+                                          {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
+                         rowsPerPageTemplate="5,10,15">
+                
+                <p:column headerText="Nome">
+                    <h:outputText value="#{paciente.nome}" />
+                </p:column>
+                
+                <p:column headerText="CPF">
+                    <h:outputText value="#{paciente.cpf}"/>
+  <!--                       <f:convertNumber pattern="###.###.###-##" />
+                    </h:outputText>-->
+                </p:column>
+                
+                <p:column headerText="Telefone">
+                    <h:outputText value="#{paciente.telefone}"/>
+  <!--                       <f:convertNumber pattern="(##) #####-####" />
+                    </h:outputText> -->
+                </p:column>
+                
+                <p:column headerText="Convênio">
+                    <h:outputText value="#{paciente.numeroConvenio}" />
+                </p:column>
+                
+                <p:column headerText="Ações" styleClass="action-column">
+                    <p:commandButton icon="pi pi-eye" 
+    oncomplete="PF('detalhesPacienteDialog').show()"
+    update=":detalhesPacienteForm"
+    styleClass="ui-button-info rounded-button"
+    title="Visualizar Detalhes">
+    <f:setPropertyActionListener value="#{paciente}" 
+        target="#{pacienteController.paciente}" />
+</p:commandButton>
+                    <p:commandButton icon="pi pi-pencil"
+                        action="#{pacienteController.edit(paciente)}"
+                        update=":editForm:editPaciente"
+                        oncomplete="PF('editPacienteDialog').show()"
+                        styleClass="edit-button rounded-button ui-button-warning"/>
+                    <p:commandButton icon="pi pi-trash" action="#{pacienteController.delete(paciente)}"
+                                   update=":listForm:pacientesTable" 
+                                   styleClass="ui-button-danger rounded-button"
+                                   onclick="return confirm('Confirma a exclusão deste paciente?')"/>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+
+        <!-- Dialog para Novo Paciente -->
+        <p:dialog header="Novo Paciente" widgetVar="novoPacienteDialog" modal="true" 
+                  showEffect="fade" hideEffect="fade" resizable="false">
+            <h:form id="newForm">
+                <p:panelGrid columns="2" columnClasses="label,value">
+                    <p:outputLabel for="nome" value="Nome:" />
+                    <p:inputText id="nome" value="#{pacienteController.paciente.nome}" required="true" />
+                    
+                    <p:outputLabel for="cpf" value="CPF:" />
+                    <p:inputMask id="cpf" value="#{pacienteController.cpfMask}" 
+                                mask="999.999.999-99" required="true" />
+                    
+                    <p:outputLabel for="telefone" value="Telefone:" />
+                    <p:inputMask id="telefone" value="#{pacienteController.telMask}" 
+                                mask="(99) 99999-9999" required="true" />
+                    
+                    <p:outputLabel for="endereco" value="Endereço:" />
+                    <p:inputText id="endereco" value="#{pacienteController.paciente.endereco}" 
+                               required="true" />
+                    
+                    <p:outputLabel for="convenio" value="Número do Convênio:" />
+                    <p:inputText id="convenio" value="#{pacienteController.paciente.numeroConvenio}" 
+                               required="true" />
+                </p:panelGrid>
+                
+                <div class="button-container">
+                    <p:commandButton value="Salvar" action="#{pacienteController.add}"
+                                   oncomplete="if (!args.validationFailed) PF('novoPacienteDialog').hide()"
+                                   update=":listForm:pacientesTable :msgs" 
+                                   styleClass="ui-button-success action-button"/>
+                    <p:commandButton value="Cancelar" onclick="PF('novoPacienteDialog').hide()"
+                                   type="button"
+                                   styleClass="ui-button-secondary action-button"/>
+                </div>
+            </h:form>
+        </p:dialog>
+
+
+        <!-- Dialog para Editar Paciente -->
+        <p:dialog header="Editar Paciente" widgetVar="editPacienteDialog" modal="true" 
+                  showEffect="fade" hideEffect="fade" resizable="false">
+            <h:form id="editForm">
+                <p:panelGrid id="editPaciente" columns="2" columnClasses="label,value">
+                    <p:outputLabel for="nomeEdit" value="Nome:" />
+                    <p:inputText id="nomeEdit" value="#{pacienteController.paciente.nome}" 
+                               required="true" />
+                    
+                    <p:outputLabel for="cpfEdit" value="CPF:" />
+                    <p:inputMask id="cpfEdit" value="#{pacienteController.cpfMask}" 
+                                mask="999.999.999-99" required="true" />
+                    
+                    <p:outputLabel for="telefoneEdit" value="Telefone:" />
+                    <p:inputMask id="telefoneEdit" value="#{pacienteController.telMask}" 
+                                mask="(99) 99999-9999" required="true" />
+                    
+                    <p:outputLabel for="enderecoEdit" value="Endereço:" />
+                    <p:inputText id="enderecoEdit" value="#{pacienteController.paciente.endereco}" 
+                               required="true" />
+                    
+                    <p:outputLabel for="convenioEdit" value="Número do Convênio:" />
+                    <p:inputText id="convenioEdit" 
+                               value="#{pacienteController.paciente.numeroConvenio}" 
+                               required="true" />
+                </p:panelGrid>
+                
+                <div class="button-container">
+                    <p:commandButton value="Atualizar" action="#{pacienteController.add}"
+                                   oncomplete="if (!args.validationFailed) PF('editPacienteDialog').hide()"
+                                   update=":listForm:pacientesTable :msgs" 
+                                   styleClass="ui-button-success action-button"/>
+                    <p:commandButton value="Cancelar" onclick="PF('editPacienteDialog').hide()"
+                                   type="button"
+                                   styleClass="ui-button-secondary action-button"/>
+               </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- Dialog de Detalhes do Paciente -->
+        <p:dialog header="Detalhes do Paciente" widgetVar="detalhesPacienteDialog" 
+              modal="true" showEffect="fade" hideEffect="fade" width="500">
+            <h:form id="detalhesPacienteForm">
+                <p:panelGrid columns="2" columnClasses="label,value" rendered="#{not empty pacienteController.paciente}">
+                    <h:outputText value="Nome:" />
+                    <h:outputText value="#{pacienteController.paciente.nome}" />
+
+                    <h:outputText value="CPF:" />
+                    <h:outputText value="#{pacienteController.paciente.cpf}" />
+
+                    <h:outputText value="Telefone:" />
+                    <h:outputText value="#{pacienteController.paciente.telefone}" />
+
+                    <h:outputText value="Endereço:" />
+                    <h:outputText value="#{pacienteController.paciente.endereco}" />
+
+                    <h:outputText value="Número do Convênio:" />
+                    <h:outputText value="#{pacienteController.paciente.numeroConvenio}" />
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>
+    </p:panel>
+</h:body>
+</html>

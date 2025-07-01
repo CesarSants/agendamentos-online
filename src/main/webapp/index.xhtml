@@ -1,0 +1,241 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Sistema de Agendamento - Login</title>
+	<style>
+		body {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			background-attachment: fixed;
+			background-size: cover;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			margin: 0;
+			padding: 20px;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-sizing: border-box;
+		}
+		.login-container {
+			background: white;
+			border-radius: 15px;
+			box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+			padding: 40px;
+			width: 100%;
+			max-width: 400px;
+			text-align: center;
+			position: relative;
+			margin: auto;
+			max-height: 90vh;
+			overflow-y: auto;
+			box-sizing: border-box;
+		}
+		.login-header {
+			margin-bottom: 30px;
+		}
+		.login-header h1 {
+			color: #333;
+			margin: 0;
+			font-size: 28px;
+			font-weight: 300;
+		}
+		.login-header p {
+			color: #666;
+			margin: 10px 0 0 0;
+		}
+		.form-group {
+			margin-bottom: 20px;
+			text-align: left;
+		}
+		.form-group label {
+			display: block;
+			margin-bottom: 5px;
+			color: #333;
+			font-weight: 500;
+		}
+		.form-group input {
+			width: 100%;
+			padding: 12px;
+			border: 2px solid #e1e5e9;
+			border-radius: 8px;
+			font-size: 16px;
+			transition: border-color 0.3s ease;
+			box-sizing: border-box;
+		}
+		.form-group input:focus {
+			outline: none;
+			border-color: #667eea;
+		}
+		.btn-primary {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			border: none;
+			padding: 12px 30px;
+			border-radius: 8px;
+			font-size: 16px;
+			font-weight: 500;
+			cursor: pointer;
+			width: 100%;
+			margin-bottom: 15px;
+			transition: transform 0.2s ease;
+		}
+		.btn-primary:hover {
+			transform: translateY(-2px);
+		}
+		.btn-secondary {
+			background: transparent;
+			color: #667eea;
+			border: 2px solid #667eea;
+			padding: 10px 30px;
+			border-radius: 8px;
+			font-size: 16px;
+			font-weight: 500;
+			cursor: pointer;
+			width: 100%;
+			transition: all 0.3s ease;
+		}
+		.btn-secondary:hover {
+			background: #667eea;
+			color: white;
+		}
+		.mode-switch {
+			margin-top: 20px;
+			padding-top: 20px;
+			border-top: 1px solid #e1e5e9;
+		}
+		.mode-switch p {
+			color: #666;
+			margin: 0 0 10px 0;
+		}
+		
+		/* Scroll bar personalizado */
+		.login-container::-webkit-scrollbar {
+			width: 6px;
+		}
+		
+		.login-container::-webkit-scrollbar-track {
+			background: transparent;
+		}
+		
+		.login-container::-webkit-scrollbar-thumb {
+			background: rgba(102, 126, 234, 0.6);
+			border-radius: 3px;
+		}
+		
+		.login-container::-webkit-scrollbar-thumb:hover {
+			background: rgba(102, 126, 234, 0.8);
+		}
+		
+		/* Para Firefox */
+		.login-container {
+			scrollbar-width: thin;
+			scrollbar-color: rgba(102, 126, 234, 0.6) transparent;
+		}
+		
+		.btn-back {
+            background: #f8f9fa;
+            color: #667eea;
+            border: 1px solid #dee2e6;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 18px;
+            box-shadow: none;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-back:hover {
+            background: #667eea;
+            color: #fff;
+        }
+	</style>
+</h:head>
+
+<h:body>
+	<!-- Verificação de parâmetros de URL -->
+	<f:metadata>
+		<f:event type="preRenderView" listener="#{authController.verificarParametrosURL}" />
+	</f:metadata>
+	
+	<div class="login-container">
+		<h:panelGroup id="headerPanel">
+			<div class="login-header">
+				<h1>Sistema de Agendamento</h1>
+				<p>#{authController.modoCadastro ? 'Crie sua conta' : 'Faça login para acessar sua conta'}</p>
+			</div>
+		</h:panelGroup>
+		
+		<!-- Wrapper para conter ambos os formulários -->
+		<h:panelGroup id="formsWrapper">
+			<!-- Formulário de Login -->
+			<h:form id="loginForm" rendered="#{!authController.modoCadastro}">
+				<p:messages id="loginMessages" showDetail="true" showSummary="true" />
+				
+				<div class="form-group">
+					<label for="loginEmail">Email:</label>
+					<p:inputText id="loginEmail" value="#{authController.email}" 
+						placeholder="Digite seu email" />
+				</div>
+				
+				<div class="form-group">
+					<label for="loginSenha">Senha:</label>
+					<p:password id="loginSenha" value="#{authController.senha}" 
+						placeholder="Digite sua senha" />
+				</div>
+				<div style="text-align: right; margin-bottom: 10px;">
+					<h:commandLink value="Esqueceu sua senha?" action="#{authController.iniciarRecuperacaoSenha}" style="font-size: 13px; color: #667eea; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0;" />
+				</div>
+				
+				<p:commandButton value="Entrar" action="#{authController.login}" 
+					styleClass="btn-primary" update="@form" />
+				
+				<!-- Botão de alternar modo (apenas no modo login) -->
+				<div class="mode-switch">
+					<p>Não tem uma conta?</p>
+					<p:commandButton value="Criar Conta" 
+						action="#{authController.alternarModo}" styleClass="btn-secondary" 
+						update=":formsWrapper :headerPanel" process="@this" />
+				</div>
+			</h:form>
+			
+			<!-- Formulário de Cadastro -->
+			<h:form id="cadastroForm" rendered="#{authController.modoCadastro}">
+				<p:messages id="cadastroMessages" showDetail="true" showSummary="true" />
+				<div class="form-group">
+					<label for="cadastroNome">Nome:</label>
+					<p:inputText id="cadastroNome" value="#{authController.nome}" 
+						placeholder="Digite seu nome completo" />
+				</div>
+				<div class="form-group">
+					<label for="cadastroEmail">Email:</label>
+					<p:inputText id="cadastroEmail" value="#{authController.email}" 
+						placeholder="Digite seu email" />
+				</div>
+				<div class="form-group">
+					<label for="cadastroSenha">Senha:</label>
+					<p:password id="cadastroSenha" value="#{authController.senha}" 
+						placeholder="Digite sua senha" />
+				</div>
+				<div class="form-group">
+					<label for="cadastroConfirmarSenha">Confirmar Senha:</label>
+					<p:password id="cadastroConfirmarSenha" value="#{authController.confirmarSenha}" 
+						placeholder="Confirme sua senha" />
+				</div>
+				<p:commandButton value="Cadastrar" action="#{authController.cadastrar}" 
+					styleClass="btn-primary" update="@form" />
+				<p:commandButton icon="pi pi-arrow-left" styleClass="p-button-rounded p-button-text p-button-sm btn-back" 
+					action="#{authController.voltarParaLogin}" update="@form :headerPanel" process="@this" />
+			</h:form>
+		</h:panelGroup>
+	</div>
+</h:body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui"
+    lang="pt-BR">
+<h:head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />    <title>Gestão de Clínicas</title>    <h:outputStylesheet>
+        th, td {
+            text-align: center;
+        }
+        h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+        .ui-panel-content {
+            padding: 1em;
+        }
+        .medicos-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .action-column {
+            width: 100px;
+            text-align: center;
+        }
+        .selection-column {
+            width: 16px;
+            text-align: center;
+        }
+        .dialog-footer {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .dialog-button {
+            display: inline-block;
+        }
+        .dialog-button-spacing {
+            margin-right: 5px;
+        }
+        .search-panel {
+            margin-bottom: 1em;
+        }
+        .search-input {
+            width: 100%;
+        }        .ui-toolbar-group-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .ui-toolbar-group-left .ui-button {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .search-input-container {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+            vertical-align: middle;
+            width: 200px;
+        }
+        .time-picker.ui-calendar {
+            width: 100%;
+        }
+        .ui-toolbar .ui-selectonemenu {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .time-picker.ui-calendar input {
+            width: 100%;
+        }
+        .medicos-table {
+            margin-top: 10px;
+        }
+    </h:outputStylesheet>
+</h:head>
+<h:body>
+    <ui:include src="/WEB-INF/templates/menu.xhtml" />
+    
+    <p:messages id="msgs" showDetail="true" closable="true">
+        <p:autoUpdate />
+    </p:messages>
+
+    <p:panel header="Gerenciamento de Clínicas">        <h:form id="searchForm">
+            <p:toolbar>
+                <p:toolbarGroup>                    <p:selectOneMenu value="#{clinicaController.searchType}" styleClass="search-type">
+                        <f:selectItem itemLabel="Nome" itemValue="nome"/>
+                        <f:selectItem itemLabel="CNPJ" itemValue="cnpj"/>
+                        <f:selectItem itemLabel="Endereço" itemValue="endereco"/>
+                        <f:selectItem itemLabel="Horário" itemValue="horario"/>
+                        <p:ajax event="change" 
+                               listener="#{clinicaController.handleSearchTypeChange}" 
+                               update=":searchForm:searchPanel"/>
+                    </p:selectOneMenu>
+                    
+                    <h:panelGroup id="searchPanel" styleClass="search-input-container">
+                        <h:panelGroup rendered="#{clinicaController.searchType ne 'horario'}">
+                            <p:inputText id="searchText"
+                                       value="#{clinicaController.searchText}" 
+                                       placeholder="Digite para buscar..." 
+                                       styleClass="search-input">
+                                <p:ajax event="keyup" 
+                                       listener="#{clinicaController.filterClinicas}" 
+                                       delay="300"
+                                       update=":listForm:clinicasTable"/>
+                            </p:inputText>
+                        </h:panelGroup>
+
+                        <h:panelGroup rendered="#{clinicaController.searchType eq 'horario'}">
+                            <p:calendar id="searchTime"
+                            		  placeholder="Selecione um horário..."
+                                      value="#{clinicaController.searchTime}"
+                                      pattern="HH:mm" 
+                                      timeOnly="true"
+                                      styleClass="time-picker">
+                                <p:ajax event="dateSelect" 
+                                       listener="#{clinicaController.filterClinicas}" 
+                                       update=":listForm:clinicasTable"/>
+                            </p:calendar>
+                        </h:panelGroup>
+                    </h:panelGroup>
+
+                    <p:commandButton icon="pi pi-times" 
+                                   action="#{clinicaController.clearSearch}"
+                                   update=":listForm:clinicasTable :searchForm:searchPanel"
+                                   styleClass="ui-button-danger"
+                                   title="Limpar busca"/>
+
+                    <p:commandButton value="Nova Clínica" 
+                                   onclick="PF('novaClinicaDialog').show()" 
+                                   action="#{clinicaController.cancel}"
+                                   update=":newForm"
+                                   icon="pi pi-plus" 
+                                   styleClass="ui-button-success"/>
+                </p:toolbarGroup>
+            </p:toolbar>
+        </h:form>
+
+        <h:form id="listForm">            <p:dataTable id="clinicasTable" var="clinica" value="#{clinicaController.clinicasExibidas}"
+                         lazy="false"
+                         emptyMessage="Nenhuma clínica encontrada" rows="10" paginator="true"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} 
+                                          {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
+                         rowsPerPageTemplate="5,10,15">
+                
+                <p:column headerText="Nome">
+                    <h:outputText value="#{clinica.nome}" />
+                </p:column>
+                
+                <p:column headerText="CNPJ">
+                    <h:outputText value="#{clinicaController.formatarCnpj(clinica.cnpj)}" />
+                </p:column>
+                
+                <p:column headerText="Total de Salas">
+                    <div class="medicos-cell">
+                        <h:outputText value="#{clinica.numeroTotalSalas}" />
+                        <p:commandButton icon="pi pi-cog"
+                            action="#{clinicaController.setSelectedClinica(clinica)}"
+                            oncomplete="PF('salasDaClinicaDialog').show()"
+                            update=":salasDaClinicaForm"
+                            styleClass="rounded-button ui-button-help">
+                        </p:commandButton>
+                    </div>
+                </p:column>
+                
+                <p:column headerText="Horário">
+                    <h:outputText value="#{clinica.horarioAbertura} - #{clinica.horarioFechamento}" />
+                </p:column>
+                
+                <p:column headerText="Médicos">
+                    <div class="medicos-cell">
+                        <h:outputText value="#{clinica.medicos.size()} médicos" />                        <p:commandButton icon="pi pi-users"
+                         action="#{clinicaController.setSelectedClinica(clinica)}"
+                         oncomplete="PF('medicosDaClinicaDialog').show()"
+                         update=":medicosDaClinicaForm"
+                         styleClass="rounded-button ui-button-help">
+                        </p:commandButton>
+                    </div>
+                </p:column>
+                
+                <p:column headerText="Ações">
+                    <p:commandButton icon="pi pi-eye" 
+    action="#{clinicaController.edit(clinica)}"
+    update=":detalhesClinicaForm"
+    oncomplete="PF('detalhesClinicaDialog').show()"
+    styleClass="ui-button-info rounded-button"
+    title="Visualizar Detalhes">
+</p:commandButton>
+                    <p:commandButton icon="pi pi-pencil"
+                        action="#{clinicaController.edit(clinica)}"
+                        update=":editForm:editClinica"
+                        oncomplete="PF('editClinicaDialog').show()"
+                        styleClass="edit-button rounded-button ui-button-warning"/>
+                    <p:commandButton icon="pi pi-trash" 
+                        action="#{clinicaController.delete(clinica)}"
+                        update=":listForm:clinicasTable :msgs" 
+                        styleClass="ui-button-danger rounded-button"
+                        onclick="return confirm('Confirma a exclusão desta clínica?')"/>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+
+        <!-- Dialog para Nova Clínica -->
+        <p:dialog header="Nova Clínica" widgetVar="novaClinicaDialog" modal="true" 
+                  showEffect="fade" hideEffect="fade" resizable="false" width="500">
+            <h:form id="newForm">
+                <p:panelGrid columns="2" columnClasses="label,value" styleClass="ui-grid">
+                    <p:outputLabel for="nome" value="Nome:" />
+                    <p:inputText id="nome" value="#{clinicaController.clinica.nome}" required="true" />
+                    
+                    <p:outputLabel for="cnpj" value="CNPJ:" />
+                    <p:inputMask id="cnpj" value="#{clinicaController.cnpjMask}" 
+                                mask="99.999.999/9999-99" required="true" />
+                                
+                    <p:outputLabel for="endereco" value="Endereço:" />
+                    <p:inputText id="endereco" value="#{clinicaController.clinica.endereco}" required="true" />
+                    
+                    <p:outputLabel for="numeroSalas" value="Número de Salas:" />
+                    <p:spinner id="numeroSalas" value="#{clinicaController.clinica.numeroTotalSalas}" 
+                              min="1" max="99" required="true" />
+                    
+                    <p:outputLabel for="horarioAbertura" value="Horário de Abertura:" />
+                    <p:calendar id="horarioAbertura" value="#{clinicaController.clinica.horarioAbertura}" 
+                              pattern="HH:mm" timeOnly="true" required="true" />
+                              
+                    <p:outputLabel for="horarioFechamento" value="Horário de Fechamento:" />
+                    <p:calendar id="horarioFechamento" value="#{clinicaController.clinica.horarioFechamento}" 
+                              pattern="HH:mm" timeOnly="true" required="true" />
+                </p:panelGrid>
+                
+                <p:separator />
+                
+                <p:commandButton value="Salvar" 
+                               action="#{clinicaController.save}" 
+                               update=":listForm:clinicasTable :msgs" 
+                               oncomplete="if (!args.validationFailed) PF('novaClinicaDialog').hide()"
+                               styleClass="ui-button-success"/>
+                <p:commandButton value="Cancelar" 
+                               onclick="PF('novaClinicaDialog').hide()" 
+                               immediate="true" 
+                               styleClass="ui-button-secondary"/>
+            </h:form>
+        </p:dialog>
+
+        <!-- Dialog para Editar Clínica -->
+        <p:dialog header="Editar Clínica" widgetVar="editClinicaDialog" modal="true" 
+                  showEffect="fade" hideEffect="fade" resizable="false" width="500">
+            <h:form id="editForm">
+                <p:panelGrid id="editClinica" columns="2" columnClasses="label,value" styleClass="ui-grid">
+                    <p:outputLabel for="nomeEdit" value="Nome:" />
+                    <p:inputText id="nomeEdit" value="#{clinicaController.clinica.nome}" required="true" />
+                    
+                    <p:outputLabel for="cnpjEdit" value="CNPJ:" />
+                    <p:inputMask id="cnpjEdit" value="#{clinicaController.cnpjMask}" 
+                                mask="99.999.999/9999-99" required="true" />
+                                
+                    <p:outputLabel for="enderecoEdit" value="Endereço:" />
+                    <p:inputText id="enderecoEdit" value="#{clinicaController.clinica.endereco}" required="true" />
+                    
+                    <p:outputLabel for="numeroSalasEdit" value="Número de Salas:" />
+                    <p:spinner id="numeroSalasEdit" value="#{clinicaController.clinica.numeroTotalSalas}" 
+                              min="1" max="99" required="true" />
+                    
+                    <p:outputLabel for="horarioAberturaEdit" value="Horário de Abertura:" />
+                    <p:calendar id="horarioAberturaEdit" value="#{clinicaController.clinica.horarioAbertura}" 
+                              pattern="HH:mm" timeOnly="true" required="true" />
+                              
+                    <p:outputLabel for="horarioFechamentoEdit" value="Horário de Fechamento:" />
+                    <p:calendar id="horarioFechamentoEdit" value="#{clinicaController.clinica.horarioFechamento}" 
+                              pattern="HH:mm" timeOnly="true" required="true" />
+                </p:panelGrid>
+                
+                <p:separator />
+                
+                <p:commandButton value="Atualizar" 
+                               action="#{clinicaController.save}" 
+                               update=":listForm:clinicasTable :msgs" 
+                               oncomplete="if (!args.validationFailed) PF('editClinicaDialog').hide()"
+                               styleClass="ui-button-success"/>
+                <p:commandButton value="Cancelar" 
+                               onclick="PF('editClinicaDialog').hide()" 
+                               immediate="true" 
+                               styleClass="ui-button-secondary"/>
+            </h:form>
+        </p:dialog>        <!-- Dialog para Gerenciar Médicos da Clínica -->
+        <p:dialog header="Gestão de Médicos da Clínica #{clinicaController.selectedClinica.nome}" 
+                  widgetVar="medicosDaClinicaDialog" 
+                  modal="true" 
+                  showEffect="fade" 
+                  hideEffect="fade" 
+                  width="800">
+            <h:form id="medicosDaClinicaForm">                
+                <!-- Painel de busca -->                <div class="p-grid search-panel">
+                    <div class="p-col-3">
+                        <p:selectOneMenu id="searchType" value="#{clinicaController.searchType}">
+                            <f:selectItem itemLabel="Nome" itemValue="nome"/>
+                            <f:selectItem itemLabel="ID" itemValue="id"/>
+                            <p:ajax update="searchPanel" listener="#{clinicaController.clearSearch}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="p-col-7">
+                        <h:panelGroup id="searchPanel">
+                            <p:inputText id="searchInput" value="#{clinicaController.searchText}"
+                                       rendered="#{clinicaController.searchType eq 'nome'}"
+                                       placeholder="Digite o nome do médico..."
+                                       styleClass="search-input">
+                                <p:ajax event="keyup" listener="#{clinicaController.filterMedicos}"
+                                       update="medicosDaClinicaTable"/>
+                            </p:inputText>
+                            <p:inputNumber id="searchInputId" value="#{clinicaController.searchText}"
+                                       rendered="#{clinicaController.searchType eq 'id'}"
+                                       placeholder="Digite o ID do médico"
+                                       decimalPlaces="0"
+                                       thousandSeparator=""
+                                       styleClass="search-input">
+                                <p:ajax event="keyup" listener="#{clinicaController.filterMedicos}"
+                                       update="medicosDaClinicaTable"/>
+                            </p:inputNumber>
+                        </h:panelGroup>
+                    </div>
+                    <div class="p-col-2">
+                        <p:commandButton value="Limpar" 
+                                       action="#{clinicaController.clearSearch}"
+                                       update="searchPanel medicosDaClinicaTable"
+                                       icon="pi pi-times"/>
+                    </div>
+                </div><p:dataTable id="medicosDaClinicaTable" 
+                            var="medico" 
+                            value="#{clinicaController.medicosExibidos}"
+                            lazy="false"
+                            emptyMessage="Nenhum médico encontrado"
+                            styleClass="medicos-table">
+                    
+                    <p:column headerText="ID">
+                        <h:outputText value="#{medico.id}" />
+                    </p:column>
+                    
+                    <p:column headerText="Nome">
+                        <h:outputText value="#{medico.nome}" />
+                    </p:column>
+                    
+                    <p:column headerText="Ações" styleClass="action-column">
+                        <p:commandButton icon="pi pi-unlink"
+                                       action="#{clinicaController.desvincularMedico(medico)}"
+                                       update=":listForm:clinicasTable :medicosDaClinicaForm:medicosDaClinicaTable :msgs @form"
+                                       styleClass="ui-button-warning"
+                                       onclick="return confirm('Deseja realmente desvincular este médico da clínica?')">
+                        </p:commandButton>
+                    </p:column>
+                </p:dataTable>
+
+                <div class="dialog-footer">
+                    <p:commandButton value="Adicionar Médicos"
+                                   actionListener="#{clinicaController.prepararMedicosDisponiveisParaVinculo}"
+                                   oncomplete="PF('medicosDaClinicaDialog').hide();PF('selecionarMedicosDialog').show()"
+                                   update=":selecionarMedicosForm:medicosDisponiveis"
+                                   styleClass="ui-button-success dialog-button dialog-button-spacing"/>
+                    <p:commandButton value="Fechar"
+                                   onclick="PF('medicosDaClinicaDialog').hide()"
+                                   type="button"
+                                   styleClass="ui-button-secondary dialog-button"/>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- Dialog para Selecionar Médicos -->
+        <p:dialog header="Selecionar Médicos" 
+          widgetVar="selecionarMedicosDialog" 
+          modal="true" 
+          showEffect="fade" 
+          hideEffect="fade" 
+          width="700">
+    <h:form id="selecionarMedicosForm">
+        <!-- Painel de busca -->
+        <div class="p-grid search-panel">
+            <div class="p-col-3">
+                <p:selectOneMenu id="searchTypeMedDisp" value="#{clinicaController.searchTypeDisponiveis}">
+                    <f:selectItem itemLabel="Nome" itemValue="nome"/>
+                    <f:selectItem itemLabel="ID" itemValue="id"/>
+                    <p:ajax update="searchPanelMedDisp" listener="#{clinicaController.clearSearchDisponiveis}"/>
+                </p:selectOneMenu>
+            </div>
+            <div class="p-col-7">
+                <h:panelGroup id="searchPanelMedDisp">
+                    <p:inputText id="searchInputDisponiveis" value="#{clinicaController.searchTextDisponiveis}"
+                               rendered="#{clinicaController.searchTypeDisponiveis eq 'nome'}"
+                               placeholder="Digite o nome do médico..."
+                               styleClass="search-input">
+                        <p:ajax event="keyup" listener="#{clinicaController.filterMedicosDisponiveis}"
+                               update="medicosDisponiveis"/>
+                    </p:inputText>
+                    <p:inputNumber id="searchInputIdDisponiveis" value="#{clinicaController.searchTextDisponiveis}"
+                               rendered="#{clinicaController.searchTypeDisponiveis eq 'id'}"
+                               placeholder="Digite o ID do médico"
+                               decimalPlaces="0"
+                               thousandSeparator=""
+                               styleClass="search-input">
+                        <p:ajax event="keyup" listener="#{clinicaController.filterMedicosDisponiveis}"
+                               update="medicosDisponiveis"/>
+                    </p:inputNumber>
+                </h:panelGroup>
+            </div>
+            <div class="p-col-2">
+                <p:commandButton value="Limpar" 
+                               action="#{clinicaController.clearSearchDisponiveis}"
+                               update="searchPanelMedDisp medicosDisponiveis"
+                               icon="pi pi-times"/>
+            </div>
+        </div>                <p:dataTable id="medicosDisponiveis"
+                     var="medico" 
+                     value="#{clinicaController.medicosDisponiveisExibidos}"
+                     selection="#{clinicaController.selectedMedicos}"
+                     rowKey="#{medico.id}"
+                     lazy="false"
+                     emptyMessage="não há mais médicos para vincular">
+                             
+                    <p:column selectionMode="multiple" styleClass="selection-column"/>
+                    
+                    <p:column headerText="ID">
+                        <h:outputText value="#{medico.id}" />
+                    </p:column>
+                    
+                    <p:column headerText="Nome">
+                        <h:outputText value="#{medico.nome}" />
+                    </p:column>
+                </p:dataTable>
+                
+                <div class="dialog-footer">
+                    <p:commandButton value="Vincular Médicos"
+                                   action="#{clinicaController.vincularMedicos}"
+                                   oncomplete="if (!args.validationFailed) {PF('selecionarMedicosDialog').hide(); PF('medicosDaClinicaDialog').show();}"
+                                   update=":listForm:clinicasTable :medicosDaClinicaForm:medicosDaClinicaTable"
+                                   styleClass="ui-button-success dialog-button dialog-button-spacing"/>
+                    <p:commandButton value="Cancelar"
+                                   onclick="PF('selecionarMedicosDialog').hide()"
+                                   type="button"
+                                   styleClass="ui-button-secondary dialog-button"/>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- Dialog para Gerenciar Salas da Clínica -->
+        <p:dialog header="Gestão de Salas da Clínica #{clinicaController.selectedClinica.nome}" 
+                 widgetVar="salasDaClinicaDialog" 
+                 modal="true" 
+                 showEffect="fade" 
+                 hideEffect="fade" 
+                 width="600">
+            <h:form id="salasDaClinicaForm">
+                <p:dataTable id="salasTable" 
+                         var="sala" 
+                         value="#{clinicaController.salasOrdenadas}"
+                         lazy="false"
+                         paginator="true" 
+                         rows="10"
+                         paginatorPosition="bottom"
+                         emptyMessage="Nenhuma sala cadastrada"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                         currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros">
+
+                    <p:column headerText="Ordem" width="80">
+                        <h:outputText value="#{sala.ordem}" />
+                    </p:column>
+
+                    <p:column headerText="Nome">
+                        <p:inplace editor="true">
+                            <p:inputText value="#{sala.nome}" required="true" requiredMessage="O nome da sala é obrigatório"/>
+                            <p:ajax event="save" listener="#{clinicaController.updateSala(sala)}" update=":salasDaClinicaForm:salasTable :msgs"/>
+                        </p:inplace>
+                    </p:column>
+                </p:dataTable>
+
+                <div class="dialog-footer">
+                    <p:commandButton value="Fechar"
+                                   onclick="PF('salasDaClinicaDialog').hide()"
+                                   type="button"
+                                   styleClass="ui-button-secondary dialog-button"/>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- Dialog para Editar Sala -->
+        <p:dialog header="Editar Sala" 
+                 widgetVar="editSalaDialog" 
+                 modal="true" 
+                 showEffect="fade" 
+                 hideEffect="fade" 
+                 width="400">
+            <h:form id="editSalaForm">
+                <p:panelGrid id="editSala" columns="2" columnClasses="label,value">
+                    <p:outputLabel for="nomeSala" value="Nome:" />
+                    <p:inputText id="nomeSala" 
+                               value="#{clinicaController.selectedSala.nome}" 
+                               required="true" />
+                </p:panelGrid>
+                
+                <div class="dialog-footer">
+                    <p:commandButton value="Salvar"
+                                   action="#{clinicaController.saveSala}"
+                                   update=":salasDaClinicaForm:salasTable"
+                                   oncomplete="if (!args.validationFailed) PF('editSalaDialog').hide()"
+                                   styleClass="ui-button-success dialog-button dialog-button-spacing"/>
+                    <p:commandButton value="Cancelar"
+                                   onclick="PF('editSalaDialog').hide()"
+                                   type="button"
+                                   styleClass="ui-button-secondary dialog-button"/>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- Dialog de Detalhes da Clínica -->
+    <p:dialog header="Detalhes da Clínica" widgetVar="detalhesClinicaDialog" 
+              modal="true" showEffect="fade" hideEffect="fade" width="500">
+        <h:form id="detalhesClinicaForm">
+            <p:panelGrid columns="2" columnClasses="label,value" rendered="#{not empty clinicaController.clinica}">
+                <h:outputText value="Nome:" />
+                <h:outputText value="#{clinicaController.clinica.nome}" />
+
+                <h:outputText value="CNPJ:" />
+                <h:outputText value="#{clinicaController.clinica.cnpj}" />
+
+                <h:outputText value="Endereço:" />
+                <h:outputText value="#{clinicaController.clinica.endereco}" />
+
+                <h:outputText value="Número Total de Salas:" />
+                <h:outputText value="#{clinicaController.clinica.numeroTotalSalas}" />
+
+                <h:outputText value="Horário de Funcionamento:" />
+                <h:outputText value="#{clinicaController.clinica.horarioAbertura} às #{clinicaController.clinica.horarioFechamento}" />
+            </p:panelGrid>
+        </h:form>
+    </p:dialog>
+    </p:panel>
+</h:body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://xmlns.jcp.org/jsf/html"
+    xmlns:f="http://xmlns.jcp.org/jsf/core"
+    xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+    xmlns:p="http://primefaces.org/ui"
+    lang="pt-BR">
+<h:head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestão de Médicos</title>    <h:outputStylesheet>
+        th, td {
+            text-align: center;
+        }
+        h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            -webkit-box-sizing:border-box;
+            -moz-box-sizing: border-box;
+        }
+        .ui-toolbar-group-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .ui-toolbar-group-left .ui-button {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .search-input-container {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+            vertical-align: middle;
+            width: 200px;
+        }
+        .ui-toolbar .ui-selectonemenu {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        .search-panel {
+            margin-bottom: 1em;
+            display: flex;
+            align-items: center;
+            gap: 1em;
+        }
+        .search-input {
+            width: 100%;
+        }
+        .p-toolbar-group-left {
+            width: 100%;
+        }
+        .button-container {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .action-button {
+            margin-right: 5px;
+            display: inline-block;
+        }
+    </h:outputStylesheet>
+</h:head>
+<h:body>
+    <ui:include src="/WEB-INF/templates/menu.xhtml" />
+    
+    <p:messages id="msgs" showDetail="true" closable="true">
+        <p:autoUpdate />
+    </p:messages>
+
+    <p:panel header="Gerenciamento de Médicos">        <h:form id="searchForm">            <p:toolbar>
+                <p:toolbarGroup styleClass="ui-toolbar-group-left">
+                    <p:selectOneMenu id="searchType" value="#{medicoController.searchType}">
+                        <f:selectItem itemLabel="Nome" itemValue="nome"/>
+                        <f:selectItem itemLabel="CPF" itemValue="cpf"/>
+                        <f:selectItem itemLabel="Endereço" itemValue="endereco"/>
+                        <p:ajax update="searchPanel" listener="#{medicoController.clearSearch}"/>
+                    </p:selectOneMenu>
+                    
+                    <div class="search-input-container">
+                        <h:panelGroup id="searchPanel">
+                            <p:inputText id="searchInputNome" value="#{medicoController.searchText}"
+                                       rendered="#{medicoController.searchType eq 'nome' or medicoController.searchType eq 'endereco'}"
+                                       placeholder="Digite para buscar..."
+                                       styleClass="search-input">
+                                <p:ajax event="keyup" listener="#{medicoController.filterMedicos}"
+                                       update=":listForm:medicosTable"/>
+                            </p:inputText>
+                            <p:inputText id="searchInputCpf" value="#{medicoController.searchText}"
+                                       rendered="#{medicoController.searchType eq 'cpf'}"
+                                       placeholder="Digite o CPF (apenas números)"
+                                       styleClass="search-input">
+                                <p:ajax event="keyup" listener="#{medicoController.filterMedicos}"
+                                       update=":listForm:medicosTable"/>
+                            </p:inputText>
+                        </h:panelGroup>
+                    </div>
+                    
+                    <p:commandButton value="Limpar" 
+                                   action="#{medicoController.clearSearch}"
+                                   update="searchPanel :listForm:medicosTable"
+                                   icon="pi pi-times"/>
+                    
+                    <p:commandButton value="Novo Médico" 
+                                   onclick="PF('novoMedicoDialog').show()" 
+                                   icon="pi pi-plus" 
+                                   styleClass="ui-button-success"/>
+                </p:toolbarGroup>
+            </p:toolbar>
+        </h:form>
+
+        <h:form id="listForm">
+            <p:dataTable id="medicosTable" var="medico" value="#{medicoController.medicosExibidos}"
+            			 lazy="false"
+                         emptyMessage="Nenhum médico encontrado" rows="10" paginator="true"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} 
+                                          {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
+                         rowsPerPageTemplate="5,10,15">
+                
+                <p:column headerText="Nome">
+                    <h:outputText value="#{medico.nome}" />
+                </p:column>
+                
+                <p:column headerText="CPF">
+                    <h:outputText value="#{medico.cpf}" />
+                </p:column>
+                
+                <p:column headerText="Tempo de Consulta">
+                    <h:outputText value="#{medico.tempoConsulta} minutos" />
+                </p:column>
+                
+                <p:column headerText="Ações">
+                    <p:commandButton icon="pi pi-eye" 
+    oncomplete="PF('detalhesMedicoDialog').show()"
+    update=":detalhesMedicoForm"
+    styleClass="ui-button-info rounded-button"
+    title="Visualizar Detalhes">
+    <f:setPropertyActionListener value="#{medico}" 
+        target="#{medicoController.medico}" />
+</p:commandButton>
+                    <p:commandButton icon="pi pi-pencil"
+                        action="#{medicoController.edit(medico)}"
+                        update=":editForm:editMedico"
+                        oncomplete="PF('editMedicoDialog').show()"
+                        styleClass="edit-button rounded-button ui-button-warning"/>
+                    <p:commandButton icon="pi pi-trash" action="#{medicoController.delete(medico)}"
+                                   update=":listForm:medicosTable" 
+                                   styleClass="ui-button-danger rounded-button"
+                                   onclick="return confirm('Confirma a exclusão deste médico?')"/>
+                </p:column>
+            </p:dataTable>
+        </h:form>
+
+        <!-- Dialog para Novo Médico -->
+        <p:dialog header="Novo Médico" widgetVar="novoMedicoDialog" modal="true" 
+                  showEffect="fade" hideEffect="fade" resizable="false">
+            <h:form id="newForm">
+                <p:panelGrid columns="2" columnClasses="label,value">
+                    <p:outputLabel for="nome" value="Nome:" />
+                    <p:inputText id="nome" value="#{medicoController.medico.nome}" required="true" />
+                    
+                    <p:outputLabel for="cpf" value="CPF:" />
+                    <p:inputMask id="cpf" value="#{medicoController.cpfMask}" 
+                                mask="999.999.999-99" required="true" />
+                    
+                    <p:outputLabel for="endereco" value="Endereço:" />
+                    <p:inputText id="endereco" value="#{medicoController.medico.endereco}" 
+                               required="true" />
+                    
+                    <p:outputLabel for="tempoConsulta" value="Tempo de Consulta (minutos):" />
+                    <p:spinner id="tempoConsulta" value="#{medicoController.medico.tempoConsulta}" 
+                             min="15" max="120" stepFactor="15" required="true" />
+                </p:panelGrid>
+                
+                <div class="button-container">
+                    <p:commandButton value="Salvar" action="#{medicoController.add}"
+                                   oncomplete="if (!args.validationFailed) PF('novoMedicoDialog').hide()"
+                                   update=":listForm:medicosTable :msgs" 
+                                   styleClass="ui-button-success action-button"/>
+                    <p:commandButton value="Cancelar" onclick="PF('novoMedicoDialog').hide()"
+                                   type="button"
+                                   styleClass="ui-button-secondary action-button"/>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- Dialog para Editar Médico -->
+        <p:dialog header="Editar Médico" widgetVar="editMedicoDialog" modal="true" 
+                  showEffect="fade" hideEffect="fade" resizable="false">
+            <h:form id="editForm">
+                <p:panelGrid id="editMedico" columns="2" columnClasses="label,value">
+                    <p:outputLabel for="nomeEdit" value="Nome:" />
+                    <p:inputText id="nomeEdit" value="#{medicoController.medico.nome}" 
+                               required="true" />
+                    
+                    <p:outputLabel for="cpfEdit" value="CPF:" />
+                    <p:inputMask id="cpfEdit" value="#{medicoController.cpfMask}" 
+                                mask="999.999.999-99" required="true" />
+                    
+                    <p:outputLabel for="enderecoEdit" value="Endereço:" />
+                    <p:inputText id="enderecoEdit" value="#{medicoController.medico.endereco}" 
+                               required="true" />
+                    
+                    <p:outputLabel for="tempoConsultaEdit" value="Tempo de Consulta (minutos):" />
+                    <p:spinner id="tempoConsultaEdit" 
+                             value="#{medicoController.medico.tempoConsulta}" 
+                             min="15" max="120" stepFactor="15" required="true" />
+                </p:panelGrid>
+                
+                <div class="button-container">
+                    <p:commandButton value="Atualizar" action="#{medicoController.add}"
+                                   oncomplete="if (!args.validationFailed) PF('editMedicoDialog').hide()"
+                                   update=":listForm:medicosTable :msgs" 
+                                   styleClass="ui-button-success action-button"/>
+                    <p:commandButton value="Cancelar" onclick="PF('editMedicoDialog').hide()"
+                                   type="button"
+                                   styleClass="ui-button-secondary action-button"/>
+                </div>
+            </h:form>
+        </p:dialog>
+
+        <!-- Dialog de Detalhes do Médico -->
+        <p:dialog header="Detalhes do Médico" widgetVar="detalhesMedicoDialog" 
+              modal="true" showEffect="fade" hideEffect="fade" width="500">
+            <h:form id="detalhesMedicoForm">
+                <p:panelGrid columns="2" columnClasses="label,value" rendered="#{not empty medicoController.medico}">
+                    <h:outputText value="Nome:" />
+                    <h:outputText value="#{medicoController.medico.nome}" />
+
+                    <h:outputText value="CPF:" />
+                    <h:outputText value="#{medicoController.medico.cpf}" />
+
+                    <h:outputText value="Endereço:" />
+                    <h:outputText value="#{medicoController.medico.endereco}" />
+
+                    <h:outputText value="Tempo de Consulta:" />
+                    <h:outputText value="#{medicoController.medico.tempoConsulta} minutos" />
+                </p:panelGrid>
+            </h:form>
+        </p:dialog>
+    </p:panel>
+</h:body>
+</html>

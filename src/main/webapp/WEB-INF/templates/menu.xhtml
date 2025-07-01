@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+    
+    <div class="menu-container">
+        <h:form id="menuForm">
+            <p:menubar styleClass="custom-menubar">
+                <p:menuitem value="Pacientes" outcome="/paciente/list" icon="pi pi-users" 
+                    styleClass="#{facesContext.viewRoot.viewId eq '/paciente/list.xhtml' ? 'active-menu-item' : ''}" />
+                <p:menuitem value="Médicos" outcome="/medico/list" icon="pi pi-user" 
+                    styleClass="#{facesContext.viewRoot.viewId eq '/medico/list.xhtml' ? 'active-menu-item' : ''}" />
+                <p:menuitem value="Clínicas" outcome="/clinica/list" icon="pi pi-building" 
+                    styleClass="#{facesContext.viewRoot.viewId eq '/clinica/list.xhtml' ? 'active-menu-item' : ''}" />
+                <p:menuitem value="Agendamentos" outcome="/agenda/list" icon="pi pi-calendar" 
+                    styleClass="#{facesContext.viewRoot.viewId eq '/agenda/list.xhtml' ? 'active-menu-item' : ''}" />
+            </p:menubar>
+        </h:form>
+        
+        <!-- Área do usuário logado separada -->
+        <h:panelGroup rendered="#{sessionScope.usuarioLogado != null}">
+            <div class="user-section">
+                <span class="user-greeting">
+                    Olá, #{sessionScope.usuarioLogado.nome}
+                </span>
+                <h:form>
+                    <p:commandButton value="Sair" action="# {authController.logout}" 
+                        icon="pi pi-sign-out" styleClass="logout-btn"
+                        onclick="PF('logoutDialog').show(); return false;" type="button" />
+                </h:form>
+            </div>
+        </h:panelGroup>
+    </div>
+    
+    <!-- Dialogo de confirmação de logout -->
+    <p:confirmDialog id="logoutDialog" widgetVar="logoutDialog" header="Confirmação" message="Tem certeza que deseja sair?" icon="pi pi-sign-out">
+        <h:form>
+            <p:commandButton value="Sim" action="#{authController.logout}" oncomplete="PF('logoutDialog').hide()" styleClass="ui-confirmdialog-yes" icon="pi pi-check"/>
+            <p:commandButton value="Não" onclick="PF('logoutDialog').hide()" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times"/>
+        </h:form>
+    </p:confirmDialog>
+    
+    <style>
+        .menu-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+         .ui-menu.ui-widget li > .ui-menuitem-link {
+       		margin-right: 14px !important;
+        }
+        
+        .custom-menubar {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* Aplica cor branca e borda preta em todos os textos do menu */
+        .custom-menubar * {
+            color: white !important;
+            text-shadow: 2px 2px 4px #000, 0 0 2px #000, 0 0 1px #000 !important;
+        }
+        
+        /* Gap entre os botões do menu */
+        .custom-menubar .ui-menubar-root-list {
+            display: flex !important;
+            gap: 18px !important;
+        }
+        
+        .custom-menubar .p-menuitem-link {
+            border-radius: 8px !important;
+            transition: all 0.8s cubic-bezier(.25,.8,.25,1) !important;
+            padding: 8px 14px !important;
+            margin: 0 !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+            background: transparent !important;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .custom-menubar .p-menuitem-icon {
+            color: white !important;
+            transition: all 0.8s cubic-bezier(.25,.8,.25,1) !important;
+        }
+        
+        /* Hover/Ativo do menu usando seletor do PrimeFaces */
+        .ui-menu.ui-widget li > .ui-menuitem-link.ui-state-hover,
+        .ui-menu.ui-widget li > .ui-menuitem-link.ui-state-active {
+            background: rgba(255,255,255,0.18) !important;
+            color: white !important;
+            border-radius: 16px !important;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+            transform: translateY(-3px) scale(1.04) !important;
+            outline: none !important;
+            text-shadow: 2px 2px 4px #000, 0 0 2px #000 !important;
+        }
+        
+        /* Animação para ativação do menu item */
+        @keyframes activateMenuItem {
+            0% {
+                opacity: 0.7;
+                transform: scale(0.90);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.0);
+            }
+        }
+        
+        /* Estilo para página atual */
+        .ui-menu.ui-widget li > .ui-menuitem-link.active-menu-item {
+            font-size: 1.2em !important;
+            font-weight: 600 !important;
+            animation: activateMenuItem 0.8s ease-out;
+        }
+        
+        .ui-menu.ui-widget li > .ui-menuitem-link.active-menu-item,
+        .ui-menu.ui-widget li > .ui-menuitem-link.active-menu-item * {
+            color: #FFD600 !important;
+            text-shadow: 0 0 2px #388E3C, 0 0 4px #388E3C, 0 0 6px #388E3C, 2px 2px 4px #388E3C !important;
+            transition: all 0.8s cubic-bezier(.25,.8,.25,1) !important;
+        }
+        
+        /* Hover na página atual - combina estilos */
+        .ui-menu.ui-widget li > .ui-menuitem-link.active-menu-item.ui-state-hover {
+            background: rgba(255,255,255,0.18) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+            transform: translateY(-3px) scale(1.04) !important;
+            outline: none !important;
+            transition: all 0.8s cubic-bezier(.25,.8,.25,1) !important;
+        }
+        
+        .ui-menu.ui-widget li > .ui-menuitem-link.active-menu-item.ui-state-hover,
+        .ui-menu.ui-widget li > .ui-menuitem-link.active-menu-item.ui-state-hover * {
+            color: #FFD600 !important;
+            text-shadow: 0 0 2px #388E3C, 0 0 4px #388E3C, 0 0 6px #388E3C, 2px 2px 4px #388E3C !important;
+            transition: all 0.8s cubic-bezier(.25,.8,.25,1) !important;
+        }
+        
+        .ui-menu.ui-widget li > .ui-menuitem-link {
+        	transition: all 0.8s cubic-bezier(.25,.8,.25,1) !important;
+        	border-radius: 10px !important;
+        }
+        
+        /* Área do usuário */
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-greeting {
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            white-space: nowrap;
+            text-shadow: 1px 1px 2px #000, 0 0 1px #000, 0 0 2px #000 !important;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.1) !important;
+            border: 1px solid rgba(255,255,255,0.3) !important;
+            color: white !important;
+            padding: 8px 16px !important;
+            border-radius: 8px !important;
+            font-size: 15px !important;
+            font-weight: 500 !important;
+            transition: all 0.8s cubic-bezier(.25,.8,.25,1) !important;
+            min-width: 70px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+            text-shadow: 1px 1px 2px #000, 0 0 1px #000 !important;
+        }
+        
+        .logout-btn:hover,
+        .logout-btn:focus {
+            background: rgba(255,255,255,0.22) !important;
+            border-color: rgba(255,255,255,0.5) !important;
+            color: white !important;
+            transform: translateY(-2px) scale(1.04) !important;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35) !important;
+            border-radius: 16px !important;
+            outline: none !important;
+        }
+    </style>
+</html>
