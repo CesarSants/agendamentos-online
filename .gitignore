@@ -1,8 +1,6 @@
 # Arquivos de configuração sensíveis
 src/main/resources/email-config.properties
 src/main/resources/database-config.properties
-src/main/resources/database-config-local.properties
-
 # Arquivos do Maven
 target/
 pom.xml.tag
