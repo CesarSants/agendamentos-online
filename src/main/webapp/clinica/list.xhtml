@@ -7,7 +7,9 @@
     lang="pt-BR">
 <h:head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />    <title>Gestão de Clínicas</title>    <h:outputStylesheet>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestão de Clínicas</title>
+    <h:outputStylesheet>
         th, td {
             text-align: center;
         }
@@ -78,9 +80,468 @@
         .medicos-table {
             margin-top: 10px;
         }
+        
+        /* Estilos do loader global - igual ao componente médico */
+        .custom-loader-overlay {
+            background: rgba(0, 0, 0, 0.7) !important;
+            background-color: rgba(0, 0, 0, 0.7) !important;
+            z-index: 9999 !important;
+        }
+        .custom-loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            pointer-events: auto !important;
+        }
+        
+        .ui-blockui-content{
+            background: rgba(0, 0, 0, 0.4);
+        }
+        .ui-blockui-content{
+        	margin-top: -8px;
+            padding: 0;
+            z-index: 1;
+        }
+        
+        .custom-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #764ba2;
+            border-top: 6px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 18px;
+            box-shadow: 0 0 20px #667eea44;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .custom-loader-text {
+            color: #764ba2;
+            font-size: 1.3em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px #667eea44, 0 0 2px #764ba2;
+        }
+        
+        /* CSS para loaders específicos por ação */
+        .action-loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Previne scroll indesejado */
+            overflow: hidden;
+            /* Garante que o loader ocupe exatamente a viewport */
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Solução para margem do body - igual ao componente médico */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box;
+        }
+        
+        #body {
+            margin: 8px;
+        }
+        
+        
+        
+
+        
+        /* Media Queries para Responsividade */
+        @media screen and (max-width: 1024px) {
+            /* Centralização do conteúdo dos dialogs apenas em telas menores */
+            .ui-dialog-content  {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                width: 100% !important;
+                margin: 0 auto !important;
+            }
+            
+            .search-input-container {
+                width: 150px;
+            }
+            
+            .ui-toolbar-group-left {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .ui-toolbar .ui-selectonemenu {
+                width: 120px !important;
+            }
+            /* --- SCROLL HORIZONTAL NATIVO NO WRAPPER CORRETO (DEFINITIVO) --- */
+            .ui-datatable-tablewrapper {
+                overflow-x: scroll !important;
+                -webkit-overflow-scrolling: touch !important;
+                touch-action: pan-x !important;
+                width: 100% !important;
+                display: block !important;
+                max-width: 100vw !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .ui-datatable-tablewrapper > table {
+                min-width: 800px !important;
+                width: max-content !important;
+                table-layout: auto !important;
+            }
+            .ui-datatable-data {
+                width: 100% !important;
+            }
+            .ui-datatable-scrollable-body {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                touch-action: pan-x !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+                display: block !important;
+            }
+            .ui-datatable-scrollable-body > table {
+                min-width: 800px !important;
+                width: max-content !important;
+            }
+            /* Dialogs responsivos */
+            .ui-dialog, .ui-dialog .ui-dialog-content {
+                max-width: 90vw !important;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            /* Garante que o conteúdo do dialog não ultrapasse */
+            .ui-panelgrid, .ui-panel .ui-panel-content {
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow-x: auto;
+            }
+            /* Toolbar responsiva */
+            .ui-toolbar-group-left {
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                width: 100% !important;
+            }
+            .ui-toolbar-group-left > * {
+                flex: 1 1 100%;
+                min-width: 0;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            /* Botões e select responsivos */
+            .ui-toolbar-group-left .ui-button,
+            .ui-toolbar-group-left .ui-selectonemenu {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+                margin-bottom: 4px;
+            }
+            /* Container dos botões em dialogs */
+            .button-container {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .button-container .ui-button {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+            }
+            /* Dialog footer responsivo */
+            .dialog-footer {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .dialog-footer .dialog-button {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+            }
+            
+            /* Gerenciadores de médicos e salas responsivos */
+            .p-grid.search-panel {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            .p-grid.search-panel .ui-selectonemenu,
+            .p-grid.search-panel .ui-inputtext,
+            .p-grid.search-panel .ui-inputnumber,
+            .p-grid.search-panel .ui-button {
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            .p-grid.search-panel .p-col-3,
+            .p-grid.search-panel .p-col-7,
+            .p-grid.search-panel .p-col-2 {
+                width: 100% !important;
+                flex: none !important;
+            }
+            .p-grid.search-panel .p-col-3 {
+                order: 1;
+            }
+            .p-grid.search-panel .p-col-7 {
+                order: 2;
+            }
+            .p-grid.search-panel .p-col-2 {
+                order: 3;
+            }
+            
+            /* Tabelas dentro de dialogs responsivas */
+            .ui-dialog .ui-datatable {
+                max-width: 100%;
+                overflow-x: auto;
+            }
+            .ui-dialog .ui-datatable-tablewrapper {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                touch-action: pan-x !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .ui-dialog .ui-datatable-tablewrapper > table {
+                min-width: 400px !important;
+                width: max-content !important;
+            }
+        }
+        
+
+        
+         .button-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+            
+            .ui-panelgrid {
+             margin-bottom: 8px;
+            }
+
+        @media screen and (max-width: 768px) {
+            #body {
+                margin: 4px;
+            }
+            
+            .search-input-container {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 5px;
+            }
+            
+            .ui-toolbar-group-left {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+            }
+            
+            .ui-toolbar-group-left .ui-button,
+            .ui-toolbar-group-left .ui-selectonemenu {
+                width: 100% !important;
+            }
+            
+            /* Ajustes para garantir largura mínima das colunas e scroll horizontal */
+            .ui-datatable-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                position: relative;
+                width: 100%;
+            }
+            
+            .ui-datatable {
+                min-width: 100%;
+            }
+            
+            .ui-datatable table {
+                min-width: 675px; /* 135px * 5 colunas */
+            }
+            
+            .ui-datatable .ui-datatable-data td,
+            .ui-datatable .ui-datatable-header th {
+                min-width: 135px;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+            
+            /* Coluna de ações precisa ser um pouco maior para acomodar os botões */
+            .ui-datatable .action-column {
+                min-width: 150px;
+            }
+            
+            /* Scroll suave */
+            .ui-datatable-wrapper {
+                scroll-behavior: smooth;
+            }
+            
+            /* Estiliza a scrollbar para melhor visualização */
+            .ui-datatable-wrapper::-webkit-scrollbar {
+                height: 6px;
+            }
+            
+            .ui-datatable-wrapper::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+            }
+            
+            .ui-datatable-wrapper::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 3px;
+            }
+            
+            .ui-datatable-wrapper::-webkit-scrollbar-thumb:hover {
+                background: #666;
+            }
+            
+            /* Restante do CSS para 768px permanece igual */
+        }
+
+        @media screen and (max-width: 480px) {
+            #body {
+                margin: 2px;
+            }
+            
+            .ui-panel .ui-panel-content {
+                padding: 0.5em;
+            }
+            
+            .button-container {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .action-button {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            /* Ajusta tamanho dos botões de ação na tabela */
+            .action-column .ui-button {
+                padding: 0.4em;
+                font-size: 0.9em;
+            }
+            
+            /* Melhor visualização da tabela em celulares */
+            .ui-datatable-reflow .ui-datatable-data td[role="gridcell"] {
+                text-align: left;
+                display: block;
+                border: 0 none;
+                width: 100% !important;
+                -webkit-box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                box-sizing: border-box;
+                float: left;
+                clear: left;
+            }
+            
+            .ui-datatable-reflow .ui-datatable-data td[role="gridcell"] .ui-column-title {
+                padding: .4em;
+                min-width: 30%;
+                display: inline-block;
+                margin: -0.4em 1em -0.4em -0.4em;
+                font-weight: bold;
+            }
+            /* Ajuste extra para mobile */
+            .ui-dialog, .ui-dialog .ui-dialog-content {
+                max-width: 98vw !important;
+            }
+            
+            /* Gerenciadores em mobile */
+            .p-grid.search-panel {
+                gap: 5px;
+            }
+            .p-grid.search-panel .p-col-3,
+            .p-grid.search-panel .p-col-7,
+            .p-grid.search-panel .p-col-2 {
+                margin-bottom: 5px;
+            }
+            
+            /* Tabelas em dialogs mobile */
+            .ui-dialog .ui-datatable-tablewrapper > table {
+                min-width: 300px !important;
+                font-size: 0.9em;
+            }
+            .ui-dialog .ui-datatable .ui-datatable-data td,
+            .ui-dialog .ui-datatable .ui-datatable-header th {
+                padding: 0.3em;
+                min-width: 80px;
+            }
+        }
+
+        @media screen and (max-height: 600px) {
+            .custom-loader-container {
+                height: 100%;
+            }
+            
+            .ui-dialog {
+                max-height: 90vh !important;
+                overflow-y: auto;
+            }
+            
+            /* Gerenciadores em telas baixas */
+            .ui-dialog .ui-datatable {
+                max-height: 50vh;
+                overflow-y: auto;
+            }
+        }
+        
+
+        
+        /* Resto do CSS existente permanece inalterado */
     </h:outputStylesheet>
 </h:head>
 <h:body>
+    <!-- Loader global -->
+    <div id="global-loader" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Carregando...</div>
+        </div>
+    </div>
+    <h:outputScript>
+    function showLoaderAndDisable(btnId) {
+        document.getElementById('global-loader').style.display = 'flex';
+        window.globalLoaderStartTime = Date.now();
+    }
+    function hideLoaderAndEnable(btnId) {
+        var elapsed = Date.now() - window.globalLoaderStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('global-loader').style.display = 'none';
+        }, remaining);
+    }
+    </h:outputScript>
+    <div id="body">
+    
     <ui:include src="/WEB-INF/templates/menu.xhtml" />
     
     <p:messages id="msgs" showDetail="true" closable="true">
@@ -96,7 +557,9 @@
                         <f:selectItem itemLabel="Horário" itemValue="horario"/>
                         <p:ajax event="change" 
                                listener="#{clinicaController.handleSearchTypeChange}" 
-                               update=":searchForm:searchPanel"/>
+                               update=":searchForm:searchPanel"
+                               onstart="showLoaderAndDisable('searchType')" 
+                               oncomplete="hideLoaderAndEnable('searchType')"/>
                     </p:selectOneMenu>
                     
                     <h:panelGroup id="searchPanel" styleClass="search-input-container">
@@ -108,7 +571,9 @@
                                 <p:ajax event="keyup" 
                                        listener="#{clinicaController.filterClinicas}" 
                                        delay="300"
-                                       update=":listForm:clinicasTable"/>
+                                       update=":listForm:clinicasTable"
+                                       onstart="showLoaderAndDisable('searchText')" 
+                                       oncomplete="hideLoaderAndEnable('searchText')"/>
                             </p:inputText>
                         </h:panelGroup>
 
@@ -121,16 +586,17 @@
                                       styleClass="time-picker">
                                 <p:ajax event="dateSelect" 
                                        listener="#{clinicaController.filterClinicas}" 
-                                       update=":listForm:clinicasTable"/>
+                                       update=":listForm:clinicasTable"
+                                       onstart="showLoaderAndDisable('searchTime')" 
+                                       oncomplete="hideLoaderAndEnable('searchTime')"/>
                             </p:calendar>
                         </h:panelGroup>
                     </h:panelGroup>
 
-                    <p:commandButton icon="pi pi-times" 
+                    <p:commandButton value="Limpar" 
                                    action="#{clinicaController.clearSearch}"
                                    update=":listForm:clinicasTable :searchForm:searchPanel"
-                                   styleClass="ui-button-danger"
-                                   title="Limpar busca"/>
+                                   icon="pi pi-times" onclick="showLoaderAndDisable(this.id)" oncomplete="hideLoaderAndEnable(this.id)"/>
 
                     <p:commandButton value="Nova Clínica" 
                                    onclick="PF('novaClinicaDialog').show()" 
@@ -148,17 +614,18 @@
                          paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} 
                                           {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                          currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
-                         rowsPerPageTemplate="5,10,15">
+                         rowsPerPageTemplate="5,10,15"
+                         scrollable="true" scrollWidth="100%">
                 
-                <p:column headerText="Nome">
+                <p:column headerText="Nome" width="135">
                     <h:outputText value="#{clinica.nome}" />
                 </p:column>
                 
-                <p:column headerText="CNPJ">
+                <p:column headerText="CNPJ" width="135">
                     <h:outputText value="#{clinicaController.formatarCnpj(clinica.cnpj)}" />
                 </p:column>
                 
-                <p:column headerText="Total de Salas">
+                <p:column headerText="Total de Salas" width="135">
                     <div class="medicos-cell">
                         <h:outputText value="#{clinica.numeroTotalSalas}" />
                         <p:commandButton icon="pi pi-cog"
@@ -170,11 +637,11 @@
                     </div>
                 </p:column>
                 
-                <p:column headerText="Horário">
+                <p:column headerText="Horário" width="135">
                     <h:outputText value="#{clinica.horarioAbertura} - #{clinica.horarioFechamento}" />
                 </p:column>
                 
-                <p:column headerText="Médicos">
+                <p:column headerText="Médicos" width="135">
                     <div class="medicos-cell">
                         <h:outputText value="#{clinica.medicos.size()} médicos" />                        <p:commandButton icon="pi pi-users"
                          action="#{clinicaController.setSelectedClinica(clinica)}"
@@ -185,24 +652,27 @@
                     </div>
                 </p:column>
                 
-                <p:column headerText="Ações">
+                <p:column headerText="Ações" styleClass="action-column" width="150">
                     <p:commandButton icon="pi pi-eye" 
     action="#{clinicaController.edit(clinica)}"
     update=":detalhesClinicaForm"
-    oncomplete="PF('detalhesClinicaDialog').show()"
+    onclick="showLoaderDetalhes()"
+    oncomplete="hideLoaderDetalhes();PF('detalhesClinicaDialog').show()"
     styleClass="ui-button-info rounded-button"
     title="Visualizar Detalhes">
 </p:commandButton>
                     <p:commandButton icon="pi pi-pencil"
                         action="#{clinicaController.edit(clinica)}"
                         update=":editForm:editClinica"
-                        oncomplete="PF('editClinicaDialog').show()"
+                        onclick="showLoaderEditar()"
+                        oncomplete="hideLoaderEditar();PF('editClinicaDialog').show()"
                         styleClass="edit-button rounded-button ui-button-warning"/>
                     <p:commandButton icon="pi pi-trash" 
                         action="#{clinicaController.delete(clinica)}"
                         update=":listForm:clinicasTable :msgs" 
                         styleClass="ui-button-danger rounded-button"
-                        onclick="return confirm('Confirma a exclusão desta clínica?')"/>
+                        onclick="showLoaderExcluir();if(!confirm('Confirma a exclusão desta clínica?')){hideLoaderExcluir();return false;}" 
+                        oncomplete="hideLoaderExcluir()"/>
                 </p:column>
             </p:dataTable>
         </h:form>
@@ -240,7 +710,8 @@
                 <p:commandButton value="Salvar" 
                                action="#{clinicaController.save}" 
                                update=":listForm:clinicasTable :msgs" 
-                               oncomplete="if (!args.validationFailed) PF('novaClinicaDialog').hide()"
+                               onclick="showLoaderSalvar()" 
+                               oncomplete="hideLoaderSalvar();if (!args.validationFailed) PF('novaClinicaDialog').hide()"
                                styleClass="ui-button-success"/>
                 <p:commandButton value="Cancelar" 
                                onclick="PF('novaClinicaDialog').hide()" 
@@ -282,7 +753,8 @@
                 <p:commandButton value="Atualizar" 
                                action="#{clinicaController.save}" 
                                update=":listForm:clinicasTable :msgs" 
-                               oncomplete="if (!args.validationFailed) PF('editClinicaDialog').hide()"
+                               onclick="showLoaderSalvar()" 
+                               oncomplete="hideLoaderSalvar();if (!args.validationFailed) PF('editClinicaDialog').hide()"
                                styleClass="ui-button-success"/>
                 <p:commandButton value="Cancelar" 
                                onclick="PF('editClinicaDialog').hide()" 
@@ -295,7 +767,8 @@
                   modal="true" 
                   showEffect="fade" 
                   hideEffect="fade" 
-                  width="800">
+                  width="60%"
+                  maxWidth="800">
             <h:form id="medicosDaClinicaForm">                
                 <!-- Painel de busca -->                <div class="p-grid search-panel">
                     <div class="p-col-3">
@@ -312,7 +785,9 @@
                                        placeholder="Digite o nome do médico..."
                                        styleClass="search-input">
                                 <p:ajax event="keyup" listener="#{clinicaController.filterMedicos}"
-                                       update="medicosDaClinicaTable"/>
+                                       update="medicosDaClinicaTable"
+                                       onstart="showLoaderAndDisable('searchInput')" 
+                                       oncomplete="hideLoaderAndEnable('searchInput')"/>
                             </p:inputText>
                             <p:inputNumber id="searchInputId" value="#{clinicaController.searchText}"
                                        rendered="#{clinicaController.searchType eq 'id'}"
@@ -321,7 +796,9 @@
                                        thousandSeparator=""
                                        styleClass="search-input">
                                 <p:ajax event="keyup" listener="#{clinicaController.filterMedicos}"
-                                       update="medicosDaClinicaTable"/>
+                                       update="medicosDaClinicaTable"
+                                       onstart="showLoaderAndDisable('searchInputId')" 
+                                       oncomplete="hideLoaderAndEnable('searchInputId')"/>
                             </p:inputNumber>
                         </h:panelGroup>
                     </div>
@@ -329,7 +806,9 @@
                         <p:commandButton value="Limpar" 
                                        action="#{clinicaController.clearSearch}"
                                        update="searchPanel medicosDaClinicaTable"
-                                       icon="pi pi-times"/>
+                                       icon="pi pi-times"
+                                       onclick="showLoaderAndDisable(this.id)" 
+                                       oncomplete="hideLoaderAndEnable(this.id)"/>
                     </div>
                 </div><p:dataTable id="medicosDaClinicaTable" 
                             var="medico" 
@@ -351,7 +830,8 @@
                                        action="#{clinicaController.desvincularMedico(medico)}"
                                        update=":listForm:clinicasTable :medicosDaClinicaForm:medicosDaClinicaTable :msgs @form"
                                        styleClass="ui-button-warning"
-                                       onclick="return confirm('Deseja realmente desvincular este médico da clínica?')">
+                                       onclick="showLoaderDesvincular();return confirm('Deseja realmente desvincular este médico da clínica?')"
+                                       oncomplete="hideLoaderDesvincular()">
                         </p:commandButton>
                     </p:column>
                 </p:dataTable>
@@ -376,7 +856,8 @@
           modal="true" 
           showEffect="fade" 
           hideEffect="fade" 
-          width="700">
+          width="90%"
+          maxWidth="700">
     <h:form id="selecionarMedicosForm">
         <!-- Painel de busca -->
         <div class="p-grid search-panel">
@@ -394,7 +875,9 @@
                                placeholder="Digite o nome do médico..."
                                styleClass="search-input">
                         <p:ajax event="keyup" listener="#{clinicaController.filterMedicosDisponiveis}"
-                               update="medicosDisponiveis"/>
+                               update="medicosDisponiveis"
+                               onstart="showLoaderAndDisable('searchInputDisponiveis')" 
+                               oncomplete="hideLoaderAndEnable('searchInputDisponiveis')"/>
                     </p:inputText>
                     <p:inputNumber id="searchInputIdDisponiveis" value="#{clinicaController.searchTextDisponiveis}"
                                rendered="#{clinicaController.searchTypeDisponiveis eq 'id'}"
@@ -403,7 +886,9 @@
                                thousandSeparator=""
                                styleClass="search-input">
                         <p:ajax event="keyup" listener="#{clinicaController.filterMedicosDisponiveis}"
-                               update="medicosDisponiveis"/>
+                               update="medicosDisponiveis"
+                               onstart="showLoaderAndDisable('searchInputIdDisponiveis')" 
+                               oncomplete="hideLoaderAndEnable('searchInputIdDisponiveis')"/>
                     </p:inputNumber>
                 </h:panelGroup>
             </div>
@@ -411,7 +896,9 @@
                 <p:commandButton value="Limpar" 
                                action="#{clinicaController.clearSearchDisponiveis}"
                                update="searchPanelMedDisp medicosDisponiveis"
-                               icon="pi pi-times"/>
+                               icon="pi pi-times"
+                               onclick="showLoaderAndDisable(this.id)" 
+                               oncomplete="hideLoaderAndEnable(this.id)"/>
             </div>
         </div>                <p:dataTable id="medicosDisponiveis"
                      var="medico" 
@@ -435,7 +922,8 @@
                 <div class="dialog-footer">
                     <p:commandButton value="Vincular Médicos"
                                    action="#{clinicaController.vincularMedicos}"
-                                   oncomplete="if (!args.validationFailed) {PF('selecionarMedicosDialog').hide(); PF('medicosDaClinicaDialog').show();}"
+                                   onclick="showLoaderVincular()" 
+                                   oncomplete="hideLoaderVincular();if (!args.validationFailed) {PF('selecionarMedicosDialog').hide(); PF('medicosDaClinicaDialog').show();}"
                                    update=":listForm:clinicasTable :medicosDaClinicaForm:medicosDaClinicaTable"
                                    styleClass="ui-button-success dialog-button dialog-button-spacing"/>
                     <p:commandButton value="Cancelar"
@@ -452,7 +940,8 @@
                  modal="true" 
                  showEffect="fade" 
                  hideEffect="fade" 
-                 width="600">
+                 width="60%"
+                 maxWidth="600">
             <h:form id="salasDaClinicaForm">
                 <p:dataTable id="salasTable" 
                          var="sala" 
@@ -470,9 +959,11 @@
                     </p:column>
 
                     <p:column headerText="Nome">
-                        <p:inplace editor="true">
+                        <p:inplace id="salaInplace" editor="true">
                             <p:inputText value="#{sala.nome}" required="true" requiredMessage="O nome da sala é obrigatório"/>
-                            <p:ajax event="save" listener="#{clinicaController.updateSala(sala)}" update=":salasDaClinicaForm:salasTable :msgs"/>
+                            <p:ajax event="save" listener="#{clinicaController.updateSala(sala)}" update=":salasDaClinicaForm:salasTable :msgs"
+                                   onstart="document.getElementById('loader-atualizar-sala').style.display='flex';" 
+                                   oncomplete="setTimeout(function(){document.getElementById('loader-atualizar-sala').style.display='none';}, 300);"/>
                         </p:inplace>
                     </p:column>
                 </p:dataTable>
@@ -505,7 +996,8 @@
                     <p:commandButton value="Salvar"
                                    action="#{clinicaController.saveSala}"
                                    update=":salasDaClinicaForm:salasTable"
-                                   oncomplete="if (!args.validationFailed) PF('editSalaDialog').hide()"
+                                   onclick="showLoaderSalvar()" 
+                                   oncomplete="hideLoaderSalvar();if (!args.validationFailed) PF('editSalaDialog').hide()"
                                    styleClass="ui-button-success dialog-button dialog-button-spacing"/>
                     <p:commandButton value="Cancelar"
                                    onclick="PF('editSalaDialog').hide()"
@@ -538,5 +1030,163 @@
         </h:form>
     </p:dialog>
     </p:panel>
+    
+    <!-- Loaders específicos por ação -->
+    <!-- Loader para salvar clínica -->
+    <div id="loader-salvar" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Salvando...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para editar clínica -->
+    <div id="loader-editar" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Atualizando...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para excluir clínica -->
+    <div id="loader-excluir" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Excluindo...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para visualizar detalhes -->
+    <div id="loader-detalhes" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Carregando...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para vincular médicos -->
+    <div id="loader-vincular" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Vinculando médicos...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para desvincular médico -->
+    <div id="loader-desvincular" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Desvinculando médico...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para atualizar sala -->
+    <div id="loader-atualizar-sala" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Atualizando sala...</div>
+        </div>
+    </div>
+    
+    <h:outputScript>
+    // Funções para controlar os loaders específicos com tempo mínimo de 0.3 segundos
+    function showLoaderSalvar() {
+        document.getElementById('loader-salvar').style.display = 'flex';
+        window.loaderSalvarStartTime = Date.now();
+    }
+    function hideLoaderSalvar() {
+        var elapsed = Date.now() - window.loaderSalvarStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-salvar').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderEditar() {
+        document.getElementById('loader-editar').style.display = 'flex';
+        window.loaderEditarStartTime = Date.now();
+    }
+    function hideLoaderEditar() {
+        var elapsed = Date.now() - window.loaderEditarStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-editar').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderExcluir() {
+        document.getElementById('loader-excluir').style.display = 'flex';
+        window.loaderExcluirStartTime = Date.now();
+    }
+    function hideLoaderExcluir() {
+        var elapsed = Date.now() - window.loaderExcluirStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-excluir').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderDetalhes() {
+        document.getElementById('loader-detalhes').style.display = 'flex';
+        window.loaderDetalhesStartTime = Date.now();
+    }
+    function hideLoaderDetalhes() {
+        var elapsed = Date.now() - window.loaderDetalhesStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-detalhes').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderVincular() {
+        document.getElementById('loader-vincular').style.display = 'flex';
+        window.loaderVincularStartTime = Date.now();
+    }
+    function hideLoaderVincular() {
+        var elapsed = Date.now() - window.loaderVincularStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-vincular').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderDesvincular() {
+        document.getElementById('loader-desvincular').style.display = 'flex';
+        window.loaderDesvincularStartTime = Date.now();
+    }
+    function hideLoaderDesvincular() {
+        var elapsed = Date.now() - window.loaderDesvincularStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-desvincular').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderAtualizarSala() {
+        document.getElementById('loader-atualizar-sala').style.display = 'flex';
+        window.loaderAtualizarSalaStartTime = Date.now();
+    }
+    function hideLoaderAtualizarSala() {
+        var elapsed = Date.now() - window.loaderAtualizarSalaStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-atualizar-sala').style.display = 'none';
+        }, remaining);
+    }
+
+    // Manter as funções originais para ações fora de dialogs
+    function showLoaderAndDisable(btnId) {
+        document.getElementById('global-loader').style.display = 'flex';
+        window.globalLoaderStartTime = Date.now();
+    }
+    function hideLoaderAndEnable(btnId) {
+        var elapsed = Date.now() - window.globalLoaderStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('global-loader').style.display = 'none';
+        }, remaining);
+    }
+    </h:outputScript>
+    </div>
 </h:body>
 </html>

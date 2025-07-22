@@ -1,6 +1,5 @@
 package br.com.cesarsants.service;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import br.com.cesarsants.dao.IUsuarioDAO;
@@ -12,13 +11,10 @@ import br.com.cesarsants.services.generic.GenericService;
  * @author cesarsants
  *
  */
-
-@ApplicationScoped
 public class UsuarioService extends GenericService<Usuario, Long> implements IUsuarioService {
 
 	private IUsuarioDAO usuarioDAO;
 
-	@Inject
 	public UsuarioService(IUsuarioDAO usuarioDAO) {
 		super(usuarioDAO);
 		this.usuarioDAO = usuarioDAO;

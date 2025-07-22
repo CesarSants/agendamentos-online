@@ -7,7 +7,6 @@ package br.com.cesarsants.exceptions;
  * @author cesarsants
  *
  */
-
 public class TableException extends Exception {
 
 	

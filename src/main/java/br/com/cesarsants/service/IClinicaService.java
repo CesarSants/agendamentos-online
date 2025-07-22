@@ -8,17 +8,13 @@ import br.com.cesarsants.domain.Usuario;
 import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.services.generic.IGenericService;
 
-/**
- * @author cesarsants
- *
- */
-
 public interface IClinicaService extends IGenericService<Clinica, Long> {
     List<Clinica> filtrarClinicas(String query);
     boolean verificarHorarioFuncionamento(Long clinicaId, LocalDateTime horario);
     boolean verificarDisponibilidadeSala(Long clinicaId, Integer numeroSala, LocalDateTime horario, Integer duracaoConsulta);
     void adicionarMedico(Long clinicaId, Long medicoId) throws Exception;
     void removerMedico(Long clinicaId, Long medicoId) throws Exception;
+    void removerMedicoComContexto(Long clinicaId, Long medicoId) throws Exception;
     Clinica buscarPorCNPJ(Long cnpj, Usuario usuario) throws DAOException;
     List<Clinica> buscarPorMedico(Long medicoId);
     List<Clinica> buscarTodos();

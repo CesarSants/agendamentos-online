@@ -7,7 +7,6 @@ import br.com.cesarsants.domain.Usuario;
  * @author cesarsants
  *
  */
-
 public interface IUsuarioDAO extends IGenericDAO<Usuario, Long> {
 	
 	/**

@@ -19,7 +19,9 @@
 			align-items: center;
 			justify-content: center;
 			box-sizing: border-box;
+			overflow: hidden;
 		}
+		
 		.login-container {
 			background: white;
 			border-radius: 15px;
@@ -163,6 +165,7 @@
 <h:body>
 	<!-- Verificação de parâmetros de URL -->
 	<f:metadata>
+		<f:viewAction action="#{sessionController.garantirSessao}" />
 		<f:event type="preRenderView" listener="#{authController.verificarParametrosURL}" />
 	</f:metadata>
 	
@@ -195,9 +198,8 @@
 					<h:commandLink value="Esqueceu sua senha?" action="#{authController.iniciarRecuperacaoSenha}" style="font-size: 13px; color: #667eea; text-decoration: underline; cursor: pointer; background: none; border: none; padding: 0;" />
 				</div>
 				
-				<p:commandButton value="Entrar" action="#{authController.login}" 
-					styleClass="btn-primary" update="@form" />
-				
+				<p:commandButton id="loginBtn" value="Entrar" action="#{authController.login}" styleClass="btn-primary" update="@form"
+					onclick="showLoaderAndDisable(this.id)" oncomplete="hideLoaderAndEnable(this.id); ativarPollingAposLogin();" />				
 				<!-- Botão de alternar modo (apenas no modo login) -->
 				<div class="mode-switch">
 					<p>Não tem uma conta?</p>
@@ -230,12 +232,100 @@
 					<p:password id="cadastroConfirmarSenha" value="#{authController.confirmarSenha}" 
 						placeholder="Confirme sua senha" />
 				</div>
-				<p:commandButton value="Cadastrar" action="#{authController.cadastrar}" 
-					styleClass="btn-primary" update="@form" />
+				<p:commandButton id="cadastroBtn" value="Cadastrar" action="#{authController.cadastrar}" styleClass="btn-primary" update="@form"
+					onclick="showLoaderAndDisable(this.id)" oncomplete="hideLoaderAndEnable(this.id)" />
 				<p:commandButton icon="pi pi-arrow-left" styleClass="p-button-rounded p-button-text p-button-sm btn-back" 
-					action="#{authController.voltarParaLogin}" update="@form :headerPanel" process="@this" />
+					action="#{authController.voltarParaLogin}" update=":formsWrapper :headerPanel" process="@this" />
 			</h:form>
 		</h:panelGroup>
 	</div>
+	<h:outputScript>
+	function showLoaderAndDisable(btnId) {
+		var btn = document.getElementById(btnId);
+		if (btn) btn.disabled = true;
+		PF('globalLoader').show();
+	}
+	function hideLoaderAndEnable(btnId) {
+		var btn = document.getElementById(btnId);
+		if (btn) btn.disabled = false;
+		PF('globalLoader').hide();
+	}
+	
+	function ativarPollingAposLogin() {
+		// Verifica se o login foi bem-sucedido (se há mensagem de sucesso)
+		var messages = document.querySelectorAll('.ui-messages-info');
+		if (messages.length > 0) {
+			console.log('Login realizado com sucesso. Ativando polling...');
+			// Aguarda um pouco para garantir que a página será redirecionada
+			setTimeout(function() {
+				if (typeof window.ativarPollingSistema === 'function') {
+					window.ativarPollingSistema();
+				}
+			}, 500);
+		}
+	}
+	
+	// Desativa o polling quando estiver na página de login
+	document.addEventListener('DOMContentLoaded', function() {
+		console.log('Página de login carregada. Desativando polling...');
+		if (typeof window.desativarPollingSistema === 'function') {
+			window.desativarPollingSistema();
+		}
+	});
+	</h:outputScript>
+	
+	<p:blockUI block="@all" widgetVar="globalLoader" styleClass="custom-loader-overlay">
+		<div class="custom-loader-container">
+			<div class="custom-spinner"></div>
+			<div class="custom-loader-text">Carregando...</div>
+		</div>
+	</p:blockUI>
+	<h:outputStylesheet>
+	.custom-loader-overlay {
+		background: rgba(0, 0, 0, 0.7) !important;
+		background-color: rgba(0, 0, 0, 0.7) !important;
+		z-index: 9999 !important;
+	}
+	.custom-loader-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		height: 100vh;
+		width: 100vw;
+		overflow: hidden;
+		pointer-events: auto !important;
+	}
+	
+	.ui-widget-content{
+			background: rgba(0, 0, 0, 0.4);
+		}
+		
+		.ui-blockui-content{
+			padding: 0;
+		}
+		
+	.custom-spinner {
+		width: 60px;
+		height: 60px;
+		border: 6px solid #764ba2;
+		border-top: 6px solid transparent;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+		margin-bottom: 18px;
+		box-shadow: 0 0 20px #667eea44;
+	}
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+	.custom-loader-text {
+		color: #764ba2;
+		font-size: 1.3em;
+		font-weight: bold;
+		letter-spacing: 1px;
+		text-shadow: 0 2px 8px #667eea44, 0 0 2px #764ba2;
+	}
+	</h:outputStylesheet>
 </h:body>
 </html>

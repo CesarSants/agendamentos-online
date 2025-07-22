@@ -10,11 +10,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-/**
- * @author cesarsants
- *
- */
-
 @Entity
 @Table(name = "email_confirmacao")
 public class EmailConfirmacao implements Serializable, Persistente {

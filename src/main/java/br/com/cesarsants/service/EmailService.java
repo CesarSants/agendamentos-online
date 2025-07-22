@@ -1,19 +1,18 @@
 package br.com.cesarsants.service;
 
 import java.util.Random;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
-/**
- * @author cesarsants
- *
- */
-
-@ApplicationScoped
 public class EmailService {
     
-    @Inject
     private GmailEmailService gmailEmailService;
+    
+    public EmailService() {
+        this(new GmailEmailService());
+    }
+    
+    public EmailService(GmailEmailService gmailEmailService) {
+        this.gmailEmailService = gmailEmailService;
+    }
     
     /**
      * Gera um código de confirmação de 6 dígitos
@@ -94,6 +93,4 @@ public class EmailService {
             return false;
         }
     }
-    
-
 } 

@@ -11,11 +11,6 @@ import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
 import br.com.cesarsants.services.generic.IGenericService;
 
-/**
- * @author cesarsants
- *
- */
-
 public interface IAgendaService extends IGenericService<Agenda, Long> {
     void concluirAgendamento(Agenda agenda) throws TipoChaveNaoEncontradaException, DAOException;
     void cancelarAgendamento(Agenda agenda) throws TipoChaveNaoEncontradaException, DAOException;
@@ -29,6 +24,10 @@ public interface IAgendaService extends IGenericService<Agenda, Long> {
     void excluirAgendamento(Long agendamentoId) throws BusinessException;
     void finalizarAgendamento(Long agendamentoId) throws BusinessException;
     Collection<Agenda> buscarPorSalaEData(Long salaId, LocalDate data);
+    boolean salaTemAgendamentos(Long salaId);
+    boolean medicoTemAgendamentos(Long medicoId);
+    boolean pacienteTemAgendamentos(Long pacienteId);
+    boolean clinicaTemAgendamentos(Long clinicaId);
     Collection<Agenda> buscarTodosComRelacionamentos() throws BusinessException;
     List<Agenda> buscarTodos();
     

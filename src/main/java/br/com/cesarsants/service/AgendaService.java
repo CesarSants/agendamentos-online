@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 
 import br.com.cesarsants.dao.IAgendaDAO;
@@ -24,12 +22,6 @@ import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
 import br.com.cesarsants.services.generic.GenericService;
 
-/**
- * @author cesarsants
- *
- */
-
-@ApplicationScoped
 public class AgendaService extends GenericService<Agenda, Long> implements IAgendaService {
     
     private final IAgendaDAO agendaDAO;
@@ -37,10 +29,16 @@ public class AgendaService extends GenericService<Agenda, Long> implements IAgen
     private final IMedicoService medicoService;
     private final IClinicaService clinicaService;
     
-    @Inject
-    private AutoCompletionSessionManager sessionManager;
+    // Instância singleton manual do AutoCompletionSessionManager
+    private static final AutoCompletionSessionManager sessionManager = AutoCompletionSessionManager.getInstance();
     
-    @Inject
+    public AgendaService() {
+        this(new br.com.cesarsants.dao.AgendaDAO(),
+             new br.com.cesarsants.service.PacienteService(),
+             new br.com.cesarsants.service.MedicoService(),
+             new br.com.cesarsants.service.ClinicaService());
+    }
+
     public AgendaService(IAgendaDAO agendaDAO, 
                         IPacienteService pacienteService,
                         IMedicoService medicoService,
@@ -180,9 +178,31 @@ public class AgendaService extends GenericService<Agenda, Long> implements IAgen
     @Override
     public void excluirAgendamento(Long agendamentoId) throws BusinessException {
         try {
+            System.out.println("AgendaService: Iniciando exclusão do agendamento ID: " + agendamentoId);
+            
+            // Verifica se o agendamento existe antes de tentar excluir
+            Agenda agenda = this.consultar(agendamentoId);
+            if (agenda == null) {
+                throw new BusinessException("Agendamento não encontrado", new Exception());
+            }
+            
+            System.out.println("AgendaService: Agendamento encontrado - Paciente: " + agenda.getPaciente().getNome() + 
+                             ", Médico: " + agenda.getMedico().getNome() + ", Data: " + agenda.getDataHora());
+            
             agendaDAO.excluirAgendamento(agendamentoId);
+            
+            System.out.println("AgendaService: Agendamento excluído com sucesso");
+            
+        } catch (BusinessException e) {
+            System.err.println("AgendaService: BusinessException ao excluir agendamento: " + e.getMessage());
+            throw e;
         } catch (DAOException | TipoChaveNaoEncontradaException e) {
+            System.err.println("AgendaService: DAOException/TipoChaveNaoEncontradaException ao excluir agendamento: " + e.getMessage());
             throw new BusinessException("Erro ao excluir agendamento: " + e.getMessage(), e);
+        } catch (Exception e) {
+            System.err.println("AgendaService: Exception geral ao excluir agendamento: " + e.getMessage());
+            e.printStackTrace();
+            throw new BusinessException("Erro inesperado ao excluir agendamento: " + e.getMessage(), e);
         }
     }
 
@@ -333,6 +353,30 @@ public class AgendaService extends GenericService<Agenda, Long> implements IAgen
     }
 
     @Override
+    public boolean salaTemAgendamentos(Long salaId) {
+        Usuario usuarioLogado = getUsuarioLogado();
+        return agendaDAO.salaTemAgendamentos(salaId, usuarioLogado);
+    }
+    
+    @Override
+    public boolean medicoTemAgendamentos(Long medicoId) {
+        Usuario usuarioLogado = getUsuarioLogado();
+        return agendaDAO.medicoTemAgendamentos(medicoId, usuarioLogado);
+    }
+    
+    @Override
+    public boolean pacienteTemAgendamentos(Long pacienteId) {
+        Usuario usuarioLogado = getUsuarioLogado();
+        return agendaDAO.pacienteTemAgendamentos(pacienteId, usuarioLogado);
+    }
+    
+    @Override
+    public boolean clinicaTemAgendamentos(Long clinicaId) {
+        Usuario usuarioLogado = getUsuarioLogado();
+        return agendaDAO.clinicaTemAgendamentos(clinicaId, usuarioLogado);
+    }
+    
+    @Override
     public List<Agenda> buscarTodos() {
         Usuario usuarioLogado = getUsuarioLogado();
         return agendaDAO.buscarTodos(usuarioLogado);
@@ -340,11 +384,13 @@ public class AgendaService extends GenericService<Agenda, Long> implements IAgen
     
     private Usuario getUsuarioLogado() {
         FacesContext facesContext = FacesContext.getCurrentInstance();
-        if (facesContext != null) {
-            HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
-            if (session != null) {
-                return (Usuario) session.getAttribute("usuarioLogado");
-            }
+        if (facesContext == null) {
+            // Proteção: nunca deve ser chamado em thread de background
+            throw new IllegalStateException("getUsuarioLogado() chamado fora de contexto JSF! Não use este método em schedulers ou threads de background.");
+        }
+        HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
+        if (session != null) {
+            return (Usuario) session.getAttribute("usuarioLogado");
         }
         return null;
     }

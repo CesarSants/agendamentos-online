@@ -2,32 +2,29 @@ package br.com.cesarsants.controller;
 
 import java.io.Serializable;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
-import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import br.com.cesarsants.dao.UsuarioDAO;
 import br.com.cesarsants.domain.Usuario;
 import br.com.cesarsants.exceptions.BusinessException;
-import br.com.cesarsants.service.IUsuarioService;
+import br.com.cesarsants.service.UsuarioService;
 
 /**
  * @author cesarsants
  *
  */
-@Named
-@ApplicationScoped
+@ManagedBean(name = "authController")
+@SessionScoped
 public class AuthController implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@Inject
-	private IUsuarioService usuarioService;
-
-	@Inject
-	private ConfirmacaoController confirmacaoController;
+	private UsuarioService usuarioService = new UsuarioService(new UsuarioDAO());
 
 	private String email;
 	private String senha;
@@ -62,7 +59,22 @@ public class AuthController implements Serializable {
 			// Armazena o usuário na sessão
 			FacesContext facesContext = FacesContext.getCurrentInstance();
 			HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
+			// NOVO: remove o atributo de sessão pública ao logar
+			session.removeAttribute("isPublicSession");
 			session.setAttribute("usuarioLogado", usuario);
+			session.setMaxInactiveInterval(30 * 60); // 30 minutos para usuário logado
+			
+			// Atualiza o estado da sessão para ativar o polling
+			try {
+				SessionController sessionController = (SessionController) FacesContext.getCurrentInstance()
+					.getApplication().evaluateExpressionGet(FacesContext.getCurrentInstance(), "#{sessionController}", SessionController.class);
+				if (sessionController != null) {
+					sessionController.atualizarEstadoSessao((HttpServletRequest) facesContext.getExternalContext().getRequest());
+					System.out.println("Estado da sessão atualizado após login. Polling será ativado.");
+				}
+			} catch (Exception e) {
+				System.err.println("Erro ao atualizar estado da sessão: " + e.getMessage());
+			}
 			
 			FacesContext.getCurrentInstance().addMessage(null, 
 				new FacesMessage(FacesMessage.SEVERITY_INFO, "Login realizado com sucesso!", "Bem-vindo " + usuario.getNome()));
@@ -97,7 +109,6 @@ public class AuthController implements Serializable {
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro no cadastro", "Erro interno do sistema"));
 				return null;
 			}
-			
 			// Validação unificada dos campos
 			if (nome == null || nome.trim().isEmpty() || 
 				email == null || email.trim().isEmpty() || 
@@ -107,21 +118,18 @@ public class AuthController implements Serializable {
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro no cadastro", "Preencha todos os campos"));
 				return null;
 			}
-			
 			// Validação específica de senhas
 			if (!senha.equals(confirmarSenha)) {
 				FacesContext.getCurrentInstance().addMessage(null, 
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro no cadastro", "Senhas não conferem"));
 				return null;
 			}
-			
 			// Validação de segurança da senha
 			if (senha.length() < 5 || !senha.matches(".*[A-Za-z].*") || !senha.matches(".*\\d.*")) {
 				FacesContext.getCurrentInstance().addMessage(null,
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro no cadastro", "A senha deve ter pelo menos 5 caracteres, pelo menos uma letra e pelo menos um número."));
 				return null;
 			}
-			
 			// Verifica se o email já existe
 			System.out.println("Verificando se email existe: " + email);
 			if (usuarioService.existePorEmail(email)) {
@@ -129,11 +137,11 @@ public class AuthController implements Serializable {
 					new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro no cadastro", "Email já cadastrado"));
 				return null;
 			}
-			
-			// Solicitar confirmação de email em vez de criar usuário diretamente
+			// Buscar o bean ConfirmacaoController via JSF
+			ConfirmacaoController confirmacaoController = (ConfirmacaoController) FacesContext.getCurrentInstance()
+				.getApplication().evaluateExpressionGet(FacesContext.getCurrentInstance(), "#{confirmacaoController}", ConfirmacaoController.class);
 			System.out.println("Solicitando confirmação de email para: " + email);
 			return confirmacaoController.solicitarConfirmacao(email, nome, senha);
-			
 		} catch (Exception e) {
 			System.out.println("Exception geral no cadastro: " + e.getMessage());
 			e.printStackTrace();
@@ -143,19 +151,31 @@ public class AuthController implements Serializable {
 		}
 	}
 
-	public String voltarParaLogin() {
+	public void voltarParaLogin() {
 		System.out.println("=== VOLTANDO PARA LOGIN ===");
 		limparCampos();
 		modoCadastro = false;
-		return "/index.xhtml?faces-redirect=true";
+		System.out.println("=== MODO ALTERADO PARA LOGIN COM SUCESSO ===");
 	}
 
 	public String logout() {
+		System.out.println("=== LOGOUT MANUAL SOLICITADO ===");
+		
 		FacesContext facesContext = FacesContext.getCurrentInstance();
 		HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
+		
 		if (session != null) {
+			// Obter usuário antes de invalidar a sessão
+			Usuario usuarioLogado = (Usuario) session.getAttribute("usuarioLogado");
+			if (usuarioLogado != null) {
+				System.out.println("Logout manual para usuário: " + usuarioLogado.getNome());
+			}
+			
+			// Invalidar a sessão
 			session.invalidate();
+			System.out.println("Sessão invalidada com sucesso");
 		}
+		
 		return "/index.xhtml?faces-redirect=true";
 	}
 
@@ -188,12 +208,39 @@ public class AuthController implements Serializable {
 	 */
 	public void verificarParametrosURL() {
 		String modo = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("modo");
+		String sessionExpired = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("sessionExpired");
+		
+		// Verificar se a sessão expirou
+		if (sessionExpired != null && sessionExpired.equals("true")) {
+			FacesContext.getCurrentInstance().addMessage(null, 
+				new FacesMessage(FacesMessage.SEVERITY_WARN, "Sessão Expirada", 
+					"Sua sessão expirou por inatividade. Faça login novamente."));
+		}
+		
 		if (modo != null && modo.equals("login")) {
 			modoCadastro = false;
 			System.out.println("Modo definido para LOGIN via parâmetro URL");
+			// Limpar email pendente do ConfirmacaoController quando voltar para login
+			limparEmailPendenteConfirmacao();
 		} else if (modo != null && modo.equals("cadastro")) {
 			modoCadastro = true;
 			System.out.println("Modo definido para CADASTRO via parâmetro URL");
+		}
+	}
+	
+	/**
+	 * Limpa o email pendente do ConfirmacaoController
+	 */
+	private void limparEmailPendenteConfirmacao() {
+		try {
+			ConfirmacaoController confirmacaoController = (ConfirmacaoController) FacesContext.getCurrentInstance()
+				.getApplication().evaluateExpressionGet(FacesContext.getCurrentInstance(), "#{confirmacaoController}", ConfirmacaoController.class);
+			if (confirmacaoController != null) {
+				confirmacaoController.limparEmailPendente();
+				System.out.println("Email pendente limpo do ConfirmacaoController");
+			}
+		} catch (Exception e) {
+			System.err.println("Erro ao limpar email pendente: " + e.getMessage());
 		}
 	}
 

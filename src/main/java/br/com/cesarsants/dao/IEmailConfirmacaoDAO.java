@@ -4,11 +4,6 @@ import br.com.cesarsants.dao.generic.IGenericDAO;
 import br.com.cesarsants.domain.EmailConfirmacao;
 import br.com.cesarsants.exceptions.DAOException;
 
-/**
- * @author cesarsants
- *
- */
-
 public interface IEmailConfirmacaoDAO extends IGenericDAO<EmailConfirmacao, Long> {
     
     /**

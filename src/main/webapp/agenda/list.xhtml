@@ -19,7 +19,8 @@
             document.getElementById('scheduleForm:paciente_input').value = '';
             document.getElementById('scheduleForm:observacoes').value = '';
         }
-    </script><h:outputStylesheet>
+    </script>
+    <h:outputStylesheet>
         .schedule-panel {
             margin: 20px;
         }
@@ -87,6 +88,351 @@
             background-color: unset !important;
             color: unset !important;
         }
+        
+        /* Estilos do loader global - igual ao componente clínica */
+        .custom-loader-overlay {
+            background: rgba(0, 0, 0, 0.7) !important;
+            background-color: rgba(0, 0, 0, 0.7) !important;
+            z-index: 9999 !important;
+        }
+        .custom-loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            pointer-events: auto !important;
+        }
+        
+        .ui-blockui-content{
+            background: rgba(0, 0, 0, 0.4);
+        }
+        .ui-blockui-content{
+        	margin-top: -8px;
+            padding: 0;
+            z-index: 1;
+        }
+        
+        .custom-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #764ba2;
+            border-top: 6px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 18px;
+            box-shadow: 0 0 20px #667eea44;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .custom-loader-text {
+            color: #764ba2;
+            font-size: 1.3em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px #667eea44, 0 0 2px #764ba2;
+        }
+        
+        /* CSS para loaders específicos por ação */
+        .action-loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Previne scroll indesejado */
+            overflow: hidden;
+            /* Garante que o loader ocupe exatamente a viewport */
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Solução para margem do body - igual ao componente clínica */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box;
+        }
+        
+        #body {
+            margin: 8px;
+        }
+        
+        
+
+        
+        /* Media Queries para Responsividade */
+        @media screen and (max-width: 1024px) {
+            /* Layout em coluna para tablet */
+            .p-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+            .p-col-6 {
+                width: 100% !important;
+                flex: none !important;
+            }
+            
+            /* --- SCROLL HORIZONTAL NATIVO NO WRAPPER CORRETO (DEFINITIVO) --- */
+            .ui-datatable-tablewrapper {
+                overflow-x: scroll !important;
+                -webkit-overflow-scrolling: touch !important;
+                touch-action: pan-x !important;
+                width: 100% !important;
+                display: block !important;
+                max-width: 100vw !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .ui-datatable-tablewrapper > table {
+                min-width: 800px !important;
+                width: max-content !important;
+                table-layout: auto !important;
+            }
+            .ui-datatable-data {
+                width: 100% !important;
+            }
+            .ui-datatable-scrollable-body {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                touch-action: pan-x !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+                display: block !important;
+            }
+            .ui-datatable-scrollable-body > table {
+                min-width: 800px !important;
+                width: max-content !important;
+            }
+            /* Dialogs responsivos */
+            .ui-dialog, .ui-dialog .ui-dialog-content {
+                max-width: 90vw !important;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            /* Garante que o conteúdo do dialog não ultrapasse */
+            .ui-panelgrid, .ui-panel .ui-panel-content {
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow-x: auto;
+            }
+            /* Sistema de busca responsivo */
+            .p-grid .p-col-12 {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .p-grid .p-col-12 > * {
+                width: 100% !important;
+                margin-bottom: 5px;
+            }
+            /* Botões e selects responsivos */
+            .p-grid .p-col-12 .ui-selectonemenu,
+            .p-grid .p-col-12 .ui-inputtext,
+            .p-grid .p-col-12 .ui-calendar,
+            .p-grid .p-col-12 .ui-button {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+            }
+            /* Dialog footer responsivo */
+            .dialog-footer {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .dialog-footer .ui-button {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+            }
+        }
+        
+        .ui-dialog-content  {
+        		display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                width: 100% !important;
+                margin: 0 auto !important;
+        }
+        
+         .button-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+            
+            .ui-panelgrid {
+             margin-bottom: 8px;
+            }
+
+        @media screen and (max-width: 768px) {
+            #body {
+                margin: 4px;
+            }
+            
+            /* Ajustes para garantir largura mínima das colunas e scroll horizontal */
+            .ui-datatable-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                position: relative;
+                width: 100%;
+            }
+            
+            .ui-datatable {
+                min-width: 100%;
+            }
+            
+            .ui-datatable table {
+                min-width: 675px; /* 135px * 5 colunas */
+            }
+            
+            .ui-datatable .ui-datatable-data td,
+            .ui-datatable .ui-datatable-header th {
+                min-width: 135px;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+            
+            /* Coluna de ações precisa ser um pouco maior para acomodar os botões */
+            .ui-datatable .action-column {
+                min-width: 150px;
+            }
+            
+            /* Scroll suave */
+            .ui-datatable-wrapper {
+                scroll-behavior: smooth;
+            }
+            
+            /* Estiliza a scrollbar para melhor visualização */
+            .ui-datatable-wrapper::-webkit-scrollbar {
+                height: 6px;
+            }
+            
+            .ui-datatable-wrapper::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+            }
+            
+            .ui-datatable-wrapper::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 3px;
+            }
+            
+            .ui-datatable-wrapper::-webkit-scrollbar-thumb:hover {
+                background: #666;
+            }
+            
+            /* Sistema de busca em mobile */
+            .p-grid .p-col-12 {
+                gap: 8px;
+            }
+            .p-grid .p-col-12 > * {
+                margin-bottom: 8px;
+            }
+            
+            /* Restante do CSS para 768px permanece igual */
+        }
+
+        @media screen and (max-width: 480px) {
+            #body {
+                margin: 2px;
+            }
+            
+            .ui-panel .ui-panel-content {
+                padding: 0.5em;
+            }
+            
+            .button-container {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .action-button {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            /* Ajusta tamanho dos botões de ação na tabela */
+            .action-column .ui-button {
+                padding: 0.4em;
+                font-size: 0.9em;
+            }
+            
+            /* Melhor visualização da tabela em celulares */
+            .ui-datatable-reflow .ui-datatable-data td[role="gridcell"] {
+                text-align: left;
+                display: block;
+                border: 0 none;
+                width: 100% !important;
+                -webkit-box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                box-sizing: border-box;
+                float: left;
+                clear: left;
+            }
+            
+            .ui-datatable-reflow .ui-datatable-data td[role="gridcell"] .ui-column-title {
+                padding: .4em;
+                min-width: 30%;
+                display: inline-block;
+                margin: -0.4em 1em -0.4em -0.4em;
+                font-weight: bold;
+            }
+            /* Ajuste extra para mobile */
+            .ui-dialog, .ui-dialog .ui-dialog-content {
+                max-width: 98vw !important;
+            }
+            
+            /* Sistema de busca em mobile pequeno */
+            .p-grid .p-col-12 {
+                gap: 5px;
+            }
+            .p-grid .p-col-12 > * {
+                margin-bottom: 5px;
+            }
+        }
+
+        @media screen and (max-height: 600px) {
+            .custom-loader-container {
+                height: 100%;
+            }
+            
+            .ui-dialog {
+                max-height: 90vh !important;
+                overflow-y: auto;
+            }
+            
+            /* Tabelas em telas baixas */
+            .ui-datatable {
+                max-height: 50vh;
+                overflow-y: auto;
+            }
+        }
+        
+        /* Resto do CSS existente permanece inalterado */
 
     </h:outputStylesheet>
     <style type="text/css">
@@ -101,6 +447,22 @@
     </style>
 </h:head>
 <h:body>
+    <!-- Loader global -->
+    <p:blockUI block="@all" widgetVar="globalLoader" styleClass="custom-loader-overlay">
+        <div class="custom-loader-container">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Carregando...</div>
+        </div>
+    </p:blockUI>
+    <h:outputScript>
+    function showLoaderAndDisable(btnId) {
+        PF('globalLoader').show();
+    }
+    function hideLoaderAndEnable(btnId) {
+        PF('globalLoader').hide();
+    }
+    </h:outputScript>
+    <div id="body">
     <ui:include src="/WEB-INF/templates/menu.xhtml" />
       <p:messages id="msgs" showDetail="true" closable="true">
         <p:autoUpdate />
@@ -405,7 +767,8 @@
                                        update=":scheduleForm :consultasForm:consultasTable :msgs"
                                        icon="pi pi-calendar-plus"
                                        styleClass="ui-button-success"
-                                       oncomplete="if (!args.validationFailed) handleSaveSuccess()"/>
+                                       onclick="showLoaderAgendar()" 
+                                       oncomplete="hideLoaderAgendar();if (!args.validationFailed) handleSaveSuccess()"/>
                     </h:form>
                 </p:panel>
 
@@ -490,9 +853,13 @@
                                               rendered="#{agendaController.searchEntityType eq 'data'}"
                                               placeholder="Selecione a data">
                                         <p:ajax event="dateSelect" listener="#{agendaController.filterAgendamentos}"
-                                               update=":consultasForm:consultasTable"/>
+                                               update=":consultasForm:consultasTable"
+                                               onstart="showLoaderBuscar()" 
+                                               oncomplete="hideLoaderBuscar()"/>
                                         <p:ajax event="change" listener="#{agendaController.filterAgendamentos}"
-                                               update=":consultasForm:consultasTable"/>
+                                               update=":consultasForm:consultasTable"
+                                               onstart="showLoaderBuscar()" 
+                                               oncomplete="hideLoaderBuscar()"/>
                                     </p:calendar>
 
                                     <p:calendar id="searchTime" 
@@ -501,11 +868,14 @@
                                               timeOnly="true"
                                               rendered="#{agendaController.searchEntityType eq 'data' or (agendaController.searchEntityType eq 'clinica' and agendaController.searchType eq 'horario')}"
                                               placeholder="Selecione o horário"
-                                              style="margin-left: 10px;">
+                                              style="margin-left: 10px;"
+                                              widgetVar="searchTimeWidget"
+                                              showButtonPanel="true"
+                                              autoClose="true">
                                         <p:ajax event="dateSelect" listener="#{agendaController.filterAgendamentos}"
-                                               update=":consultasForm:consultasTable"/>
-                                        <p:ajax event="change" listener="#{agendaController.filterAgendamentos}"
-                                               update=":consultasForm:consultasTable"/>
+                                               update=":consultasForm:consultasTable"
+                                               onstart="showLoaderBuscar()" 
+                                               oncomplete="hideLoaderBuscar()"/>
                                     </p:calendar>
 
                                     <!-- Campo de texto para outras buscas -->
@@ -515,7 +885,9 @@
                                                placeholder="Digite para buscar..."
                                                style="width: 100%;">
                                         <p:ajax event="keyup" listener="#{agendaController.filterAgendamentos}"
-                                               update=":consultasForm:consultasTable"/>
+                                               update=":consultasForm:consultasTable"
+                                               onstart="showLoaderBuscar()" 
+                                               oncomplete="hideLoaderBuscar()"/>
                                     </p:inputText>
                                 </h:panelGroup>
 
@@ -523,6 +895,8 @@
                                 <p:commandButton value="Limpar" 
                                                action="#{agendaController.clearSearch}"
                                                update="searchForm :consultasForm:consultasTable"
+                                               onclick="showLoaderBuscar()" 
+                                               oncomplete="hideLoaderBuscar()"
                                                icon="pi pi-times"/>
                                 
                                 <!-- Seletor de Ordenação -->
@@ -535,7 +909,9 @@
                                     <f:selectItem itemLabel="Médico" itemValue="medico"/>
                                     <f:selectItem itemLabel="Paciente" itemValue="paciente"/>
                                     <p:ajax update=":consultasForm:consultasTable" 
-                                           listener="#{agendaController.onOrdenacaoChange}"/>
+                                           listener="#{agendaController.onOrdenacaoChange}"
+                                           onstart="showLoaderBuscar()" 
+                                           oncomplete="hideLoaderBuscar()"/>
                                 </p:selectOneMenu>
                             </div>
                         </div>
@@ -558,24 +934,25 @@
                                 rowsPerPageTemplate="5,10,15"
                                 emptyMessage="Nenhuma consulta encontrada"
                                 lazy="false"
-                                styleClass="consultas-table">
+                                styleClass="consultas-table"
+                                scrollable="true" scrollWidth="100%">
                             <p:ajax event="page" ignoreAutoUpdate="true" />
                             <p:autoUpdate />
-                            <p:column headerText="Data/Hora">
+                            <p:column headerText="Data/Hora" width="135">
                                 <h:outputText value="#{consulta.dataHora}">
                                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" type="localDateTime"/>
                                 </h:outputText>
                             </p:column>
 
-                            <p:column headerText="Paciente">
+                            <p:column headerText="Paciente" width="135">
                                 <h:outputText value="#{consulta.paciente.nome}" />
                             </p:column>
 
-                            <p:column headerText="Médico">
+                            <p:column headerText="Médico" width="135">
                                 <h:outputText value="#{consulta.medico.nome}" />
-                            </p:column>                            <p:column headerText="Clínica/Sala">
+                            </p:column>                            <p:column headerText="Clínica/Sala" width="135">
                                 <h:outputText value="#{consulta.clinica.nome} - #{consulta.sala.nome}" />
-                            </p:column>                            <p:column headerText="Status">
+                            </p:column>                            <p:column headerText="Status" width="135">
                                 <div class="status-actions">
                                     <p:tag styleClass="#{consulta.status.cssClass}" 
                                            value="#{consulta.status.descricao}" 
@@ -585,6 +962,8 @@
                                                    styleClass="ui-button-success rounded-button action-button"
                                                    rendered="#{consulta.status.name() eq 'AGENDADO'}"
                                                    title="Finalizar Consulta"
+                                                   onclick="showLoaderFinalizar()" 
+                                                   oncomplete="hideLoaderFinalizar()"
                                                    process="@this">
                                         <p:confirm header="Confirmação" 
                                                   message="Deseja finalizar esta consulta?" 
@@ -595,6 +974,8 @@
                                                    styleClass="ui-button-warning rounded-button action-button"
                                                    rendered="#{consulta.status.name() eq 'AGENDADO'}"
                                                    title="Cancelar Consulta"
+                                                   onclick="showLoaderCancelar()" 
+                                                   oncomplete="hideLoaderCancelar()"
                                                    process="@this">
                                         <p:confirm header="Confirmação" 
                                                   message="Deseja cancelar esta consulta?" 
@@ -603,10 +984,11 @@
                                     
                                 </div>
                             </p:column>                            
-                            <p:column headerText="Ações">                                
+                            <p:column headerText="Ações" styleClass="action-column" width="150">                                
                             <div class="status-actions">
                                     <p:commandButton icon="pi pi-eye" 
-                     oncomplete="PF('detalhesDialog').show()"
+                     onclick="showLoaderDetalhes()"
+                     oncomplete="hideLoaderDetalhes();PF('detalhesDialog').show()"
                      update=":detalhesForm"
                      styleClass="ui-button-info rounded-button"
                      title="Visualizar Detalhes">
@@ -616,7 +998,8 @@
     
     <p:commandButton icon="pi pi-pencil"
                      action="#{agendaController.prepararEdicao(consulta)}"
-                     oncomplete="PF('editDialog').show()"
+                     onclick="showLoaderEditar()"
+                     oncomplete="hideLoaderEditar();PF('editDialog').show()"
                      update=":editForm"
                      styleClass="ui-button-warning rounded-button"
                      title="Editar Agendamento" />                                    
@@ -624,7 +1007,9 @@
                                                    action="#{agendaController.excluirConsulta(consulta)}"
                                                    update=":consultasForm:consultasTable :msgs @form"
                                                    styleClass="ui-button-danger rounded-button action-button"
-                                                   title="Excluir Consulta">
+                                                   title="Excluir Consulta"
+                                                   onclick="showLoaderExcluir()" 
+                                                   oncomplete="hideLoaderExcluir()">
                                         <p:confirm header="Confirmação" 
                                                   message="Deseja excluir esta consulta?" 
                                                   icon="pi pi-exclamation-triangle" />
@@ -810,7 +1195,8 @@
             <p:commandButton value="Salvar" 
                            action="#{agendaController.salvarEdicao}"
                            update=":consultasForm:consultasTable :msgs @form"
-                           oncomplete="if (!args.validationFailed) PF('editDialog').hide()"
+                           onclick="showLoaderEditar()" 
+                           oncomplete="hideLoaderEditar();if (!args.validationFailed) PF('editDialog').hide()"
                            styleClass="ui-button-success" />
             <p:commandButton value="Cancelar"
                            onclick="PF('editDialog').hide()"
@@ -835,8 +1221,163 @@
 	               update=":consultasForm:consultasTable"
 	               autoStart="true"
 	               global="false"
-	               async="true" />
-	    </h:form>
+	               async="true"
+	               onstart="window.isSystemPolling = true; console.log('Polling iniciado');"
+	               oncomplete="window.isSystemPolling = false; console.log('Polling completado');" />
+	    	</h:form>
 	</h:panelGrid>
+    
+    <!-- Loaders específicos por ação -->
+    <!-- Loader para agendar consulta -->
+    <div id="loader-agendar" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Agendando consulta...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para editar consulta -->
+    <div id="loader-editar" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Editando consulta...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para excluir consulta -->
+    <div id="loader-excluir" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Excluindo consulta...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para finalizar consulta -->
+    <div id="loader-finalizar" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Finalizando consulta...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para cancelar consulta -->
+    <div id="loader-cancelar" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Cancelando consulta...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para visualizar detalhes -->
+    <div id="loader-detalhes" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Carregando detalhes...</div>
+        </div>
+    </div>
+    
+    <!-- Loader para buscar -->
+    <div id="loader-buscar" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Buscando...</div>
+        </div>
+    </div>
+    
+    <h:outputScript>
+    // Funções para controlar os loaders específicos com tempo mínimo de 0.3 segundos
+    function showLoaderAgendar() {
+        document.getElementById('loader-agendar').style.display = 'flex';
+        window.loaderAgendarStartTime = Date.now();
+    }
+    function hideLoaderAgendar() {
+        var elapsed = Date.now() - window.loaderAgendarStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-agendar').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderEditar() {
+        document.getElementById('loader-editar').style.display = 'flex';
+        window.loaderEditarStartTime = Date.now();
+    }
+    function hideLoaderEditar() {
+        var elapsed = Date.now() - window.loaderEditarStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-editar').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderExcluir() {
+        document.getElementById('loader-excluir').style.display = 'flex';
+        window.loaderExcluirStartTime = Date.now();
+    }
+    function hideLoaderExcluir() {
+        var elapsed = Date.now() - window.loaderExcluirStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-excluir').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderFinalizar() {
+        document.getElementById('loader-finalizar').style.display = 'flex';
+        window.loaderFinalizarStartTime = Date.now();
+    }
+    function hideLoaderFinalizar() {
+        var elapsed = Date.now() - window.loaderFinalizarStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-finalizar').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderCancelar() {
+        document.getElementById('loader-cancelar').style.display = 'flex';
+        window.loaderCancelarStartTime = Date.now();
+    }
+    function hideLoaderCancelar() {
+        var elapsed = Date.now() - window.loaderCancelarStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-cancelar').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderDetalhes() {
+        document.getElementById('loader-detalhes').style.display = 'flex';
+        window.loaderDetalhesStartTime = Date.now();
+    }
+    function hideLoaderDetalhes() {
+        var elapsed = Date.now() - window.loaderDetalhesStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-detalhes').style.display = 'none';
+        }, remaining);
+    }
+
+    function showLoaderBuscar() {
+        document.getElementById('loader-buscar').style.display = 'flex';
+        window.loaderBuscarStartTime = Date.now();
+    }
+    function hideLoaderBuscar() {
+        var elapsed = Date.now() - window.loaderBuscarStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('loader-buscar').style.display = 'none';
+        }, remaining);
+    }
+
+    // Manter as funções originais para ações fora de dialogs
+    function showLoaderAndDisable(btnId) {
+        PF('globalLoader').show();
+    }
+    function hideLoaderAndEnable(btnId) {
+        PF('globalLoader').hide();
+    }
+    </h:outputScript>
+    </div>
 </h:body>
 </html>

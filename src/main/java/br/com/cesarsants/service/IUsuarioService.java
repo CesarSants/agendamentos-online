@@ -8,7 +8,6 @@ import br.com.cesarsants.services.generic.IGenericService;
  * @author cesarsants
  *
  */
-
 public interface IUsuarioService extends IGenericService<Usuario, Long> {
 	
 	/**

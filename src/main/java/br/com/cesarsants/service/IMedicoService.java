@@ -7,11 +7,6 @@ import br.com.cesarsants.domain.Usuario;
 import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.services.generic.IGenericService;
 
-/**
- * @author cesarsants
- *
- */
-
 public interface IMedicoService extends IGenericService<Medico, Long> {
     Medico buscarPorCPF(Long cpf, Usuario usuario) throws DAOException;
     List<Medico> filtrarMedicos(String query);

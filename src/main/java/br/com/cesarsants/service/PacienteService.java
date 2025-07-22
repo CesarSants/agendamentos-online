@@ -2,9 +2,7 @@ package br.com.cesarsants.service;
 
 import java.util.List;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 
 import br.com.cesarsants.dao.IPacienteDAO;
@@ -13,17 +11,14 @@ import br.com.cesarsants.domain.Usuario;
 import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.services.generic.GenericService;
 
-/**
- * @author cesarsants
- *
- */
-
-@ApplicationScoped
 public class PacienteService extends GenericService<Paciente, Long> implements IPacienteService {
     
     private IPacienteDAO pacienteDAO;
-    
-    @Inject
+
+    public PacienteService() {
+        this(new br.com.cesarsants.dao.PacienteDAO());
+    }
+
     public PacienteService(IPacienteDAO pacienteDAO) {
         super(pacienteDAO);
         this.pacienteDAO = pacienteDAO;
@@ -55,6 +50,30 @@ public class PacienteService extends GenericService<Paciente, Long> implements I
     public List<Paciente> buscarTodos() {
         Usuario usuarioLogado = getUsuarioLogado();
         return pacienteDAO.buscarTodos(usuarioLogado);
+    }
+    
+    @Override
+    public void excluir(Paciente paciente) throws DAOException {
+        if (paciente == null || paciente.getId() == null) {
+            throw new DAOException("Paciente inválido para exclusão", null);
+        }
+
+        try {
+            // Verifica se o paciente tem agendamentos
+            IAgendaService agendaService = new br.com.cesarsants.service.AgendaService();
+            if (agendaService.pacienteTemAgendamentos(paciente.getId())) {
+                throw new DAOException("Não é possível excluir o paciente '" + paciente.getNome() + "' pois ele possui agendamentos registrados no sistema.", null);
+            }
+
+            // Se não houver agendamentos, prossegue com a exclusão
+            super.excluir(paciente);
+        } catch (DAOException e) {
+            // Propaga a exceção mantendo a mensagem original
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace(); // Log do erro para debug
+            throw new DAOException("Erro ao excluir paciente: " + e.getMessage(), e);
+        }
     }
     
     private Usuario getUsuarioLogado() {

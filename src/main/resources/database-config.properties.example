@@ -1,0 +1,3 @@
+neon.jdbc.url=url de conexao
+neon.jdbc.user=seu usuario 
+neon.jdbc.password=sua senha

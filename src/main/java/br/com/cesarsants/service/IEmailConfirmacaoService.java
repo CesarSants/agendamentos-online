@@ -3,11 +3,6 @@ package br.com.cesarsants.service;
 import br.com.cesarsants.domain.EmailConfirmacao;
 import br.com.cesarsants.exceptions.BusinessException;
 
-/**
- * @author cesarsants
- *
- */
-
 public interface IEmailConfirmacaoService {
     
     /**

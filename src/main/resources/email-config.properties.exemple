@@ -1,0 +1,4 @@
+gmail.smtp.host=host
+gmail.smtp.port=porta
+gmail.username=usuario
+gmail.password=senha 

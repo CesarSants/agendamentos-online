@@ -1,19 +1,21 @@
 package br.com.cesarsants.service;
 
-import javax.enterprise.context.ApplicationScoped;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Logger;
-import javax.mail.*;
-import javax.mail.internet.*;
 
-/**
- * @author cesarsants
- *
- */
+import javax.mail.Authenticator;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
-@ApplicationScoped
 public class GmailEmailService {
     
     private static final Logger logger = Logger.getLogger(GmailEmailService.class.getName());
@@ -33,25 +35,37 @@ public class GmailEmailService {
      */
     private void loadConfiguration() {
         try {
-            Properties props = new Properties();
-            try (InputStream input = getClass().getClassLoader().getResourceAsStream("email-config.properties")) {
-                if (input != null) {
-                    props.load(input);
-                    logger.info("Configuração carregada de email-config.properties");
-                    
-                    smtpHost = props.getProperty("gmail.smtp.host");
-                    smtpPort = props.getProperty("gmail.smtp.port");
-                    username = props.getProperty("gmail.username");
-                    password = props.getProperty("gmail.password");
-                    
-                    if (smtpHost != null && smtpPort != null && username != null && password != null) {
-                        configured = true;
-                        logger.info("GmailEmailService configurado com sucesso");
+            // Primeiro tenta ler das variáveis de ambiente
+            String envHost = System.getenv("GMAIL_SMTP_HOST");
+            String envPort = System.getenv("GMAIL_SMTP_PORT");
+            String envUser = System.getenv("GMAIL_USERNAME");
+            String envPass = System.getenv("GMAIL_PASSWORD");
+            if (envHost != null && envPort != null && envUser != null && envPass != null) {
+                smtpHost = envHost;
+                smtpPort = envPort;
+                username = envUser;
+                password = envPass;
+                configured = true;
+                logger.info("Configuração de email carregada das variáveis de ambiente do sistema");
+            } else {
+                Properties props = new Properties();
+                try (InputStream input = getClass().getClassLoader().getResourceAsStream("email-config.properties")) {
+                    if (input != null) {
+                        props.load(input);
+                        logger.info("Configuração carregada de email-config.properties");
+                        smtpHost = props.getProperty("gmail.smtp.host");
+                        smtpPort = props.getProperty("gmail.smtp.port");
+                        username = props.getProperty("gmail.username");
+                        password = props.getProperty("gmail.password");
+                        if (smtpHost != null && smtpPort != null && username != null && password != null) {
+                            configured = true;
+                            logger.info("GmailEmailService configurado com sucesso");
+                        } else {
+                            logger.warning("Configurações de email incompletas no arquivo email-config.properties");
+                        }
                     } else {
-                        logger.warning("Configurações de email incompletas no arquivo email-config.properties");
+                        logger.warning("Arquivo email-config.properties não encontrado. Crie este arquivo em src/main/resources/ ou defina as variáveis de ambiente GMAIL_SMTP_HOST, GMAIL_SMTP_PORT, GMAIL_USERNAME, GMAIL_PASSWORD");
                     }
-                } else {
-                    logger.warning("Arquivo email-config.properties não encontrado. Crie este arquivo em src/main/resources/");
                 }
             }
         } catch (Exception e) {

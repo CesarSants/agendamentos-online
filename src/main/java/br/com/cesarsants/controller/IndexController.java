@@ -4,15 +4,14 @@
 package br.com.cesarsants.controller;
 
 import java.io.Serializable;
-
-import javax.faces.view.ViewScoped;
-import javax.inject.Named;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ViewScoped;
 
 /**
  * @author cesarsants
  *
  */
-@Named
+@ManagedBean(name = "indexController")
 @ViewScoped
 public class IndexController implements Serializable {
 

@@ -7,16 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.inject.Inject;
 
 import br.com.cesarsants.exceptions.BusinessException;
-
-/**
- * @author cesarsants
- *
- */
 
 /**
  * Scheduler responsável por verificar e concluir automaticamente agendamentos
@@ -24,22 +16,33 @@ import br.com.cesarsants.exceptions.BusinessException;
  * 
  * Executa a cada 1 minuto para verificar agendamentos que devem ser concluídos.
  * Só executa se houver usuários com o sistema de atualização automática ativo.
+ * 
+ * Singleton manual para manter o comportamento original sem EJB.
  */
-@Singleton
-@Startup
 public class AgendaAutoCompletionScheduler {
+    
+    // Singleton manual
+    private static final AgendaAutoCompletionScheduler INSTANCE = new AgendaAutoCompletionScheduler();
+    
+    // Construtor privado para singleton
+    private AgendaAutoCompletionScheduler() {
+        System.out.println("AgendaAutoCompletionScheduler singleton criado às " + LocalDateTime.now());
+        inicializar();
+    }
+    
+    // Método para obter a instância singleton
+    public static AgendaAutoCompletionScheduler getInstance() {
+        return INSTANCE;
+    }
     
     private static final int INTERVALO_VERIFICACAO_MINUTOS = 1; // Verifica a cada 1 minuto
     
-    @Inject
-    private IAgendaService agendaService;
-    
-    @Inject
-    private AutoCompletionSessionManager sessionManager;
+    // Remover @Inject e instanciar manualmente
+    private final IAgendaService agendaService = new br.com.cesarsants.service.AgendaService();
+    private final AutoCompletionSessionManager sessionManager = AutoCompletionSessionManager.getInstance();
     
     private ScheduledExecutorService scheduler;
     
-    @PostConstruct
     public void inicializar() {
         System.out.println("Iniciando AgendaAutoCompletionScheduler às " + LocalDateTime.now());
         
@@ -58,7 +61,6 @@ public class AgendaAutoCompletionScheduler {
                           "Verificações a cada " + INTERVALO_VERIFICACAO_MINUTOS + " minutos.");
     }
     
-    @PreDestroy
     public void finalizar() {
         System.out.println("Finalizando AgendaAutoCompletionScheduler às " + LocalDateTime.now());
         

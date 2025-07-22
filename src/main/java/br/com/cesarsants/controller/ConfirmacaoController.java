@@ -2,11 +2,10 @@ package br.com.cesarsants.controller;
 
 import java.io.Serializable;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.faces.bean.SessionScoped;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 import br.com.cesarsants.domain.Usuario;
 import br.com.cesarsants.exceptions.BusinessException;
@@ -14,27 +13,19 @@ import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
 import br.com.cesarsants.service.EmailService;
 import br.com.cesarsants.service.IEmailConfirmacaoService;
-import br.com.cesarsants.service.IUsuarioService;
+import br.com.cesarsants.service.UsuarioService;
 
-/**
- * @author cesarsants
- *
- */
-
-@Named
-@ApplicationScoped
+@ManagedBean(name = "confirmacaoController")
+@SessionScoped
 public class ConfirmacaoController implements Serializable {
     
     private static final long serialVersionUID = 1L;
     
-    @Inject
-    private EmailService emailService;
+    private final EmailService emailService = new br.com.cesarsants.service.EmailService();
     
-    @Inject
-    private IEmailConfirmacaoService emailConfirmacaoService;
+    private final IEmailConfirmacaoService emailConfirmacaoService = new br.com.cesarsants.service.EmailConfirmacaoService();
     
-    @Inject
-    private IUsuarioService usuarioService;
+    private UsuarioService usuarioService = new UsuarioService(new br.com.cesarsants.dao.UsuarioDAO());
     
     private String codigoDigitado;
     private String emailPendente;
@@ -97,7 +88,18 @@ public class ConfirmacaoController implements Serializable {
     public String confirmarEmail() {
         try {
             System.out.println("=== CONFIRMANDO EMAIL ===");
-            System.out.println("Email: " + emailPendente);
+            System.out.println("Email do atributo: " + emailPendente);
+            
+            // Garantir que o email está carregado da sessão
+            String emailDaSessao = (String) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("emailPendente");
+            System.out.println("Email da sessão: " + emailDaSessao);
+            
+            if (emailPendente == null && emailDaSessao != null) {
+                emailPendente = emailDaSessao;
+                System.out.println("Email carregado da sessão: " + emailPendente);
+            }
+            
+            System.out.println("Email final: " + emailPendente);
             System.out.println("Código digitado: " + codigoDigitado);
             
             if (codigoDigitado == null || codigoDigitado.trim().isEmpty()) {
@@ -234,14 +236,23 @@ public class ConfirmacaoController implements Serializable {
         FacesContext.getCurrentInstance().getExternalContext().getSessionMap().remove("senhaPendente");
     }
     
-    /**
-     * Carrega o email pendente da sessão
-     */
-    public void carregarEmailPendente() {
-        if (emailPendente == null) {
-            emailPendente = (String) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("emailPendente");
-        }
-    }
+    	/**
+	 * Carrega o email pendente da sessão
+	 */
+	public void carregarEmailPendente() {
+		System.out.println("=== CARREGANDO EMAIL PENDENTE ===");
+		emailPendente = (String) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("emailPendente");
+		System.out.println("Email carregado da sessão: " + emailPendente);
+	}
+	
+	/**
+	 * Limpa o email pendente do controller
+	 */
+	public void limparEmailPendente() {
+		this.emailPendente = null;
+		this.codigoDigitado = null;
+		System.out.println("=== EMAIL PENDENTE LIMPO ===");
+	}
     
     // Getters e Setters
     public String getCodigoDigitado() {
@@ -252,13 +263,17 @@ public class ConfirmacaoController implements Serializable {
         this.codigoDigitado = codigoDigitado;
     }
     
-    public String getEmailPendente() {
-        // Carrega o email da sessão se ainda não foi carregado
-        if (emailPendente == null) {
-            emailPendente = (String) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("emailPendente");
-        }
-        return emailPendente;
-    }
+    	public String getEmailPendente() {
+		// Sempre carrega o email da sessão para garantir que está atualizado
+		String emailDaSessao = (String) FacesContext.getCurrentInstance().getExternalContext().getSessionMap().get("emailPendente");
+		if (emailDaSessao != null && !emailDaSessao.equals(emailPendente)) {
+			System.out.println("=== ATUALIZANDO EMAIL PENDENTE NO GETTER ===");
+			System.out.println("Email anterior: " + emailPendente);
+			System.out.println("Email da sessão: " + emailDaSessao);
+			emailPendente = emailDaSessao;
+		}
+		return emailPendente;
+	}
     
     public void setEmailPendente(String emailPendente) {
         this.emailPendente = emailPendente;

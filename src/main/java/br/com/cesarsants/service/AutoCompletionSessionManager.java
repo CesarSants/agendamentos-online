@@ -4,23 +4,27 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-
 /**
  * Gerenciador central de sessões para o sistema de atualização automática.
  * Controla quais usuários têm o sistema de atualização automática ativo
  * e gerencia o estado global do scheduler.
+ * 
+ * Singleton manual para manter o estado compartilhado entre todas as instâncias.
  */
-
-/**
- * @author cesarsants
- *
- */
-
-@Singleton
-@Startup
 public class AutoCompletionSessionManager {
+    
+    // Singleton manual
+    private static final AutoCompletionSessionManager INSTANCE = new AutoCompletionSessionManager();
+    
+    // Construtor privado para singleton
+    private AutoCompletionSessionManager() {
+        System.out.println("AutoCompletionSessionManager singleton criado às " + java.time.LocalDateTime.now());
+    }
+    
+    // Método para obter a instância singleton
+    public static AutoCompletionSessionManager getInstance() {
+        return INSTANCE;
+    }
     
     // Set thread-safe para armazenar os IDs dos usuários com sistema ativo
     private final Set<Long> usuariosAtivos = ConcurrentHashMap.newKeySet();

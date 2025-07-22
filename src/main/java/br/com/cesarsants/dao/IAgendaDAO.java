@@ -11,11 +11,6 @@ import br.com.cesarsants.domain.Usuario;
 import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
 
-/**
- * @author cesarsants
- *
- */
-
 public interface IAgendaDAO extends IGenericDAO<Agenda, Long> {
     void concluirAgendamento(Agenda agenda) throws TipoChaveNaoEncontradaException, DAOException;
     void cancelarAgendamento(Agenda agenda) throws TipoChaveNaoEncontradaException, DAOException;
@@ -29,5 +24,9 @@ public interface IAgendaDAO extends IGenericDAO<Agenda, Long> {
     Collection<Agenda> buscarPorSalaEData(Long salaId, LocalDate data, Usuario usuario);
     Collection<Agenda> buscarTodosComRelacionamentos(Usuario usuario) throws DAOException;
     List<Agenda> buscarTodos(Usuario usuario);
+    boolean salaTemAgendamentos(Long salaId, Usuario usuario);
+    boolean medicoTemAgendamentos(Long medicoId, Usuario usuario);
+    boolean pacienteTemAgendamentos(Long pacienteId, Usuario usuario);
+    boolean clinicaTemAgendamentos(Long clinicaId, Usuario usuario);
     Collection<Agenda> buscarTodosComRelacionamentosPorUsuarioId(Long usuarioId) throws DAOException;
 }

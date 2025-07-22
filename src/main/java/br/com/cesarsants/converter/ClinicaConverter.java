@@ -7,17 +7,10 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.faces.convert.FacesConverter;
-import javax.inject.Named;
 
 import br.com.cesarsants.domain.Clinica;
 
-/**
- * @author cesarsants
- *
- */
-
-@Named
-@FacesConverter(value = "clinicaConverter", forClass = Clinica.class)
+@FacesConverter(value = "clinicaConverter")
 public class ClinicaConverter implements Converter {
 
     private static final String key = "br.com.cesarsants.converter.ClinicaConverter";

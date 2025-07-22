@@ -17,7 +17,6 @@ import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
  * @author cesarsants
  *
  */
-
 public abstract class GenericService<T extends Persistente, E extends Serializable> 
 	implements IGenericService<T, E> {
 	

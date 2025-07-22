@@ -1,54 +1,53 @@
 package br.com.cesarsants.dao;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.TypedQuery;
 
 import br.com.cesarsants.dao.generic.GenericDAO;
 import br.com.cesarsants.domain.Usuario;
+import br.com.cesarsants.exceptions.DAOException;
+import br.com.cesarsants.exceptions.MaisDeUmRegistroException;
+import br.com.cesarsants.exceptions.TableException;
+import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
+import br.com.cesarsants.service.EntityManagerFactoryService;
+
+import javax.persistence.NoResultException;
+import java.util.List;
 
 /**
  * @author cesarsants
  *
  */
-
-@ApplicationScoped
 public class UsuarioDAO extends GenericDAO<Usuario, Long> implements IUsuarioDAO {
 
-	@PersistenceContext
-	private EntityManager entityManager;
+	private static EntityManagerFactory getEmf() {
+		return EntityManagerFactoryService.getEntityManagerFactory();
+	}
 
 	public UsuarioDAO() {
 		super(Usuario.class);
 		System.out.println("=== USUARIO DAO CONSTRUÍDO ===");
-		System.out.println("EntityManager: " + entityManager);
 	}
 
 	@Override
 	public Usuario buscarPorEmail(String email) {
 		System.out.println("=== DAO: BUSCANDO POR EMAIL ===");
 		System.out.println("Email: " + email);
-		System.out.println("EntityManager: " + entityManager);
 		
-		if (entityManager == null) {
-			System.out.println("ERRO: entityManager é null!");
-			return null;
-		}
-		
+		EntityManager em = getEmf().createEntityManager();
 		try {
-			Usuario usuario = entityManager.createQuery(
-				"SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class)
-				.setParameter("email", email)
-				.getSingleResult();
-			System.out.println("Usuário encontrado no banco: " + usuario.getNome());
+			TypedQuery<Usuario> query = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class);
+			query.setParameter("email", email);
+			List<Usuario> usuarios = query.getResultList();
+			Usuario usuario = usuarios.isEmpty() ? null : usuarios.get(0);			if (usuario != null) {
+				System.out.println("Usuário encontrado no banco: " + usuario.getNome());
+			} else {
+				System.out.println("Nenhum usuário encontrado com este email");
+			}
 			return usuario;
-		} catch (javax.persistence.NoResultException e) {
-			System.out.println("Nenhum usuário encontrado com este email");
-			return null;
-		} catch (Exception e) {
-			System.out.println("Erro ao buscar usuário: " + e.getMessage());
-			e.printStackTrace();
-			return null;
+		} finally {
+			em.close();
 		}
 	}
 
@@ -56,27 +55,52 @@ public class UsuarioDAO extends GenericDAO<Usuario, Long> implements IUsuarioDAO
 	public Boolean existePorEmail(String email) {
 		System.out.println("=== DAO: VERIFICANDO SE EMAIL EXISTE ===");
 		System.out.println("Email: " + email);
-		System.out.println("EntityManager: " + entityManager);
 		
-		if (entityManager == null) {
-			System.out.println("ERRO: entityManager é null!");
-			return false;
-		}
-		
+		EntityManager em = getEmf().createEntityManager();
 		try {
-			Long count = entityManager.createQuery(
-				"SELECT COUNT(u) FROM Usuario u WHERE u.email = :email", Long.class)
-				.setParameter("email", email)
-				.getSingleResult();
-			System.out.println("Quantidade de usuários com este email: " + count);
+			TypedQuery<Long> query = em.createQuery("SELECT COUNT(u) FROM Usuario u WHERE u.email = :email", Long.class);
+			query.setParameter("email", email);
+			List<Long> counts = query.getResultList();
+			Long count = counts.isEmpty() ? 0L : counts.get(0);			System.out.println("Quantidade de usuários com este email: " + count);
 			return count > 0;
-		} catch (javax.persistence.NoResultException e) {
-			System.out.println("Nenhum resultado encontrado");
-			return false;
-		} catch (Exception e) {
-			System.out.println("Erro ao verificar email: " + e.getMessage());
-			e.printStackTrace();
-			return false;
+		} finally {
+			em.close();
+		}
+	}
+
+	public Usuario findByLogin(String login) throws DAOException {
+		EntityManager em = getEmf().createEntityManager();
+		try {
+			TypedQuery<Usuario> query = em.createQuery("SELECT u FROM Usuario u WHERE u.login = :login", Usuario.class);
+			query.setParameter("login", login);
+			List<Usuario> result = query.getResultList();
+			return result.isEmpty() ? null : result.get(0);
+		} finally {
+			em.close();
+		}
+	}
+
+	public Usuario findByEmail(String email) throws DAOException {
+		EntityManager em = getEmf().createEntityManager();
+		try {
+			TypedQuery<Usuario> query = em.createQuery("SELECT u FROM Usuario u WHERE u.email = :email", Usuario.class);
+			query.setParameter("email", email);
+			List<Usuario> result = query.getResultList();
+			return result.isEmpty() ? null : result.get(0);
+		} finally {
+			em.close();
+		}
+	}
+
+	public boolean existsByEmail(String email) throws DAOException {
+		EntityManager em = getEmf().createEntityManager();
+		try {
+			TypedQuery<Long> query = em.createQuery("SELECT COUNT(u) FROM Usuario u WHERE u.email = :email", Long.class);
+			query.setParameter("email", email);
+			Long count = query.getSingleResult();
+			return count > 0;
+		} finally {
+			em.close();
 		}
 	}
 } 

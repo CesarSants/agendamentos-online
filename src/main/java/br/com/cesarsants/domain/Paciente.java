@@ -16,11 +16,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-/**
- * @author cesarsants
- *
- */
-
 @Entity
 @Table(name = "TB_PACIENTE")
 @NamedQuery(name = "Paciente.findByNome", query = "SELECT p FROM Paciente p WHERE p.nome LIKE :nome") 

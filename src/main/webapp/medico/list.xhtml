@@ -64,9 +64,374 @@
             margin-right: 5px;
             display: inline-block;
         }
+        
+        /* Estilos do loader global - igual ao componente paciente */
+        .custom-loader-overlay {
+            background: rgba(0, 0, 0, 0.7) !important;
+            background-color: rgba(0, 0, 0, 0.7) !important;
+            z-index: 9999 !important;
+        }
+        .custom-loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            pointer-events: auto !important;
+        }
+        
+        .ui-blockui-content{
+            background: rgba(0, 0, 0, 0.4);
+        }
+        .ui-blockui-content{
+        	margin-top: -8px;
+            padding: 0;
+            z-index: 1;
+        }
+        
+        .custom-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #764ba2;
+            border-top: 6px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 18px;
+            box-shadow: 0 0 20px #667eea44;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .custom-loader-text {
+            color: #764ba2;
+            font-size: 1.3em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px #667eea44, 0 0 2px #764ba2;
+        }
+        
+        /* CSS para loaders específicos por ação */
+        .action-loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Previne scroll indesejado */
+            overflow: hidden;
+            /* Garante que o loader ocupe exatamente a viewport */
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Solução para margem do body - igual ao componente paciente */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box;
+        }
+        
+        #body {
+            margin: 8px;
+        }
+        
+        
+
+        
+        /* Media Queries para Responsividade */
+        @media screen and (max-width: 1024px) {
+            .search-input-container {
+                width: 150px;
+            }
+            
+            .ui-toolbar-group-left {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .ui-toolbar .ui-selectonemenu {
+                width: 120px !important;
+            }
+            /* --- SCROLL HORIZONTAL NATIVO NO WRAPPER CORRETO (DEFINITIVO) --- */
+            .ui-datatable-tablewrapper {
+                overflow-x: scroll !important;
+                -webkit-overflow-scrolling: touch !important;
+                touch-action: pan-x !important;
+                width: 100% !important;
+                display: block !important;
+                max-width: 100vw !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .ui-datatable-tablewrapper > table {
+                min-width: 800px !important;
+                width: max-content !important;
+                table-layout: auto !important;
+            }
+            .ui-datatable-data {
+                width: 100% !important;
+            }
+            .ui-datatable-scrollable-body {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                touch-action: pan-x !important;
+                width: 100% !important;
+                max-width: 100vw !important;
+                display: block !important;
+            }
+            .ui-datatable-scrollable-body > table {
+                min-width: 800px !important;
+                width: max-content !important;
+            }
+            /* Dialogs responsivos */
+            .ui-dialog, .ui-dialog .ui-dialog-content {
+                max-width: 90vw !important;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            /* Garante que o conteúdo do dialog não ultrapasse */
+            .ui-panelgrid, .ui-panel .ui-panel-content {
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow-x: auto;
+            }
+            /* Toolbar responsiva */
+            .ui-toolbar-group-left {
+                flex-wrap: wrap !important;
+                gap: 8px !important;
+                width: 100% !important;
+            }
+            .ui-toolbar-group-left > * {
+                flex: 1 1 100%;
+                min-width: 0;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            /* Botões e select responsivos */
+            .ui-toolbar-group-left .ui-button,
+            .ui-toolbar-group-left .ui-selectonemenu {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+                margin-bottom: 4px;
+            }
+            /* Container dos botões em dialogs */
+            .button-container {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .button-container .ui-button {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+            }
+        }
+        
+        .ui-dialog-content  {
+        		display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                width: 100% !important;
+                margin: 0 auto !important;
+        }
+        
+         .button-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+            
+            .ui-panelgrid {
+             margin-bottom: 8px;
+            }
+
+        @media screen and (max-width: 768px) {
+            #body {
+                margin: 4px;
+            }
+            
+            .search-input-container {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 5px;
+            }
+            
+            .ui-toolbar-group-left {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+            }
+            
+            .ui-toolbar-group-left .ui-button,
+            .ui-toolbar-group-left .ui-selectonemenu {
+                width: 100% !important;
+            }
+            
+            /* Ajustes para garantir largura mínima das colunas e scroll horizontal */
+            .ui-datatable-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                position: relative;
+                width: 100%;
+            }
+            
+            .ui-datatable {
+                min-width: 100%;
+            }
+            
+            .ui-datatable table {
+                min-width: 675px; /* 135px * 5 colunas */
+            }
+            
+            .ui-datatable .ui-datatable-data td,
+            .ui-datatable .ui-datatable-header th {
+                min-width: 135px;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+            
+            /* Coluna de ações precisa ser um pouco maior para acomodar os botões */
+            .ui-datatable .action-column {
+                min-width: 150px;
+            }
+            
+            /* Scroll suave */
+            .ui-datatable-wrapper {
+                scroll-behavior: smooth;
+            }
+            
+            /* Estiliza a scrollbar para melhor visualização */
+            .ui-datatable-wrapper::-webkit-scrollbar {
+                height: 6px;
+            }
+            
+            .ui-datatable-wrapper::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 3px;
+            }
+            
+            .ui-datatable-wrapper::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 3px;
+            }
+            
+            .ui-datatable-wrapper::-webkit-scrollbar-thumb:hover {
+                background: #666;
+            }
+            
+            /* Restante do CSS para 768px permanece igual */
+        }
+
+        @media screen and (max-width: 480px) {
+            #body {
+                margin: 2px;
+            }
+            
+            .ui-panel .ui-panel-content {
+                padding: 0.5em;
+            }
+            
+            .button-container {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .action-button {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            /* Ajusta tamanho dos botões de ação na tabela */
+            .action-column .ui-button {
+                padding: 0.4em;
+                font-size: 0.9em;
+            }
+            
+            /* Melhor visualização da tabela em celulares */
+            .ui-datatable-reflow .ui-datatable-data td[role="gridcell"] {
+                text-align: left;
+                display: block;
+                border: 0 none;
+                width: 100% !important;
+                -webkit-box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                box-sizing: border-box;
+                float: left;
+                clear: left;
+            }
+            
+            .ui-datatable-reflow .ui-datatable-data td[role="gridcell"] .ui-column-title {
+                padding: .4em;
+                min-width: 30%;
+                display: inline-block;
+                margin: -0.4em 1em -0.4em -0.4em;
+                font-weight: bold;
+            }
+            /* Ajuste extra para mobile */
+            .ui-dialog, .ui-dialog .ui-dialog-content {
+                max-width: 98vw !important;
+            }
+        }
+
+        @media screen and (max-height: 600px) {
+            .custom-loader-container {
+                height: 100%;
+            }
+            
+            .ui-dialog {
+                max-height: 90vh !important;
+                overflow-y: auto;
+            }
+        }
+        
+        /* Resto do CSS existente permanece inalterado */
     </h:outputStylesheet>
 </h:head>
 <h:body>
+    <!-- Loader global -->
+    <div id="global-loader" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Carregando...</div>
+        </div>
+    </div>
+    <h:outputScript>
+    function showLoaderAndDisable(btnId) {
+        document.getElementById('global-loader').style.display = 'flex';
+        window.globalLoaderStartTime = Date.now();
+    }
+    function hideLoaderAndEnable(btnId) {
+        var elapsed = Date.now() - window.globalLoaderStartTime;
+        var remaining = Math.max(0, 300 - elapsed);
+        setTimeout(function() {
+            document.getElementById('global-loader').style.display = 'none';
+        }, remaining);
+    }
+    </h:outputScript>
+    <div id="body">
+    
     <ui:include src="/WEB-INF/templates/menu.xhtml" />
     
     <p:messages id="msgs" showDetail="true" closable="true">
@@ -79,7 +444,7 @@
                         <f:selectItem itemLabel="Nome" itemValue="nome"/>
                         <f:selectItem itemLabel="CPF" itemValue="cpf"/>
                         <f:selectItem itemLabel="Endereço" itemValue="endereco"/>
-                        <p:ajax update="searchPanel" listener="#{medicoController.clearSearch}"/>
+                        <p:ajax update="searchPanel" listener="#{medicoController.clearSearch}" onstart="showLoaderAndDisable('searchType')" oncomplete="hideLoaderAndEnable('searchType')"/>
                     </p:selectOneMenu>
                     
                     <div class="search-input-container">
@@ -89,14 +454,14 @@
                                        placeholder="Digite para buscar..."
                                        styleClass="search-input">
                                 <p:ajax event="keyup" listener="#{medicoController.filterMedicos}"
-                                       update=":listForm:medicosTable"/>
+                                       update=":listForm:medicosTable" onstart="showLoaderAndDisable('searchInputNome')" oncomplete="hideLoaderAndEnable('searchInputNome')"/>
                             </p:inputText>
                             <p:inputText id="searchInputCpf" value="#{medicoController.searchText}"
                                        rendered="#{medicoController.searchType eq 'cpf'}"
                                        placeholder="Digite o CPF (apenas números)"
                                        styleClass="search-input">
                                 <p:ajax event="keyup" listener="#{medicoController.filterMedicos}"
-                                       update=":listForm:medicosTable"/>
+                                       update=":listForm:medicosTable" onstart="showLoaderAndDisable('searchInputCpf')" oncomplete="hideLoaderAndEnable('searchInputCpf')"/>
                             </p:inputText>
                         </h:panelGroup>
                     </div>
@@ -104,7 +469,7 @@
                     <p:commandButton value="Limpar" 
                                    action="#{medicoController.clearSearch}"
                                    update="searchPanel :listForm:medicosTable"
-                                   icon="pi pi-times"/>
+                                   icon="pi pi-times" onclick="showLoaderAndDisable(this.id)" oncomplete="hideLoaderAndEnable(this.id)"/>
                     
                     <p:commandButton value="Novo Médico" 
                                    onclick="PF('novoMedicoDialog').show()" 
@@ -121,23 +486,25 @@
                          paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} 
                                           {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
                          currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
-                         rowsPerPageTemplate="5,10,15">
+                         rowsPerPageTemplate="5,10,15"
+                         scrollable="true" scrollWidth="100%">
                 
-                <p:column headerText="Nome">
+                <p:column headerText="Nome" width="135">
                     <h:outputText value="#{medico.nome}" />
                 </p:column>
                 
-                <p:column headerText="CPF">
+                <p:column headerText="CPF" width="135">
                     <h:outputText value="#{medico.cpf}" />
                 </p:column>
                 
-                <p:column headerText="Tempo de Consulta">
+                <p:column headerText="Tempo de Consulta" width="135">
                     <h:outputText value="#{medico.tempoConsulta} minutos" />
                 </p:column>
                 
-                <p:column headerText="Ações">
+                <p:column headerText="Ações" styleClass="action-column" width="150">
                     <p:commandButton icon="pi pi-eye" 
-    oncomplete="PF('detalhesMedicoDialog').show()"
+    onclick="showLoaderDetalhes()"
+    oncomplete="hideLoaderDetalhes();PF('detalhesMedicoDialog').show()"
     update=":detalhesMedicoForm"
     styleClass="ui-button-info rounded-button"
     title="Visualizar Detalhes">
@@ -147,12 +514,14 @@
                     <p:commandButton icon="pi pi-pencil"
                         action="#{medicoController.edit(medico)}"
                         update=":editForm:editMedico"
-                        oncomplete="PF('editMedicoDialog').show()"
+                        onclick="showLoaderEditar()"
+                        oncomplete="hideLoaderEditar();PF('editMedicoDialog').show()"
                         styleClass="edit-button rounded-button ui-button-warning"/>
                     <p:commandButton icon="pi pi-trash" action="#{medicoController.delete(medico)}"
                                    update=":listForm:medicosTable" 
                                    styleClass="ui-button-danger rounded-button"
-                                   onclick="return confirm('Confirma a exclusão deste médico?')"/>
+                                   onclick="showLoaderExcluir();if(!confirm('Confirma a exclusão deste médico?')){hideLoaderExcluir();return false;}" 
+                                   oncomplete="hideLoaderExcluir()"/>
                 </p:column>
             </p:dataTable>
         </h:form>
@@ -180,7 +549,8 @@
                 
                 <div class="button-container">
                     <p:commandButton value="Salvar" action="#{medicoController.add}"
-                                   oncomplete="if (!args.validationFailed) PF('novoMedicoDialog').hide()"
+                                   onclick="showLoaderSalvar()" 
+                                   oncomplete="hideLoaderSalvar();if (!args.validationFailed) PF('novoMedicoDialog').hide()"
                                    update=":listForm:medicosTable :msgs" 
                                    styleClass="ui-button-success action-button"/>
                     <p:commandButton value="Cancelar" onclick="PF('novoMedicoDialog').hide()"
@@ -215,7 +585,8 @@
                 
                 <div class="button-container">
                     <p:commandButton value="Atualizar" action="#{medicoController.add}"
-                                   oncomplete="if (!args.validationFailed) PF('editMedicoDialog').hide()"
+                                   onclick="showLoaderEditar()" 
+                                   oncomplete="hideLoaderEditar();if (!args.validationFailed) PF('editMedicoDialog').hide()"
                                    update=":listForm:medicosTable :msgs" 
                                    styleClass="ui-button-success action-button"/>
                     <p:commandButton value="Cancelar" onclick="PF('editMedicoDialog').hide()"
@@ -245,5 +616,103 @@
             </h:form>
         </p:dialog>
     </p:panel>
+    </div>
+
+<!-- Loaders específicos por ação -->
+<!-- Loader para salvar novo médico -->
+<div id="loader-salvar-novo" class="action-loader" style="display:none;">
+    <div class="loader-content">
+        <div class="custom-spinner"></div>
+        <div class="custom-loader-text">Salvando...</div>
+    </div>
+</div>
+
+<!-- Loader para editar médico -->
+<div id="loader-editar" class="action-loader" style="display:none;">
+    <div class="loader-content">
+        <div class="custom-spinner"></div>
+        <div class="custom-loader-text">Atualizando...</div>
+    </div>
+</div>
+
+<!-- Loader para excluir médico -->
+<div id="loader-excluir" class="action-loader" style="display:none;">
+    <div class="loader-content">
+        <div class="custom-spinner"></div>
+        <div class="custom-loader-text">Excluindo...</div>
+    </div>
+</div>
+
+<!-- Loader para visualizar detalhes -->
+<div id="loader-detalhes" class="action-loader" style="display:none;">
+    <div class="loader-content">
+        <div class="custom-spinner"></div>
+        <div class="custom-loader-text">Carregando...</div>
+    </div>
+</div>
+
+<h:outputScript>
+// Funções para controlar os loaders específicos com tempo mínimo de 0.3 segundos
+function showLoaderSalvar() {
+    document.getElementById('loader-salvar-novo').style.display = 'flex';
+    window.loaderSalvarStartTime = Date.now();
+}
+function hideLoaderSalvar() {
+    var elapsed = Date.now() - window.loaderSalvarStartTime;
+    var remaining = Math.max(0, 300 - elapsed);
+    setTimeout(function() {
+        document.getElementById('loader-salvar-novo').style.display = 'none';
+    }, remaining);
+}
+
+function showLoaderEditar() {
+    document.getElementById('loader-editar').style.display = 'flex';
+    window.loaderEditarStartTime = Date.now();
+}
+function hideLoaderEditar() {
+    var elapsed = Date.now() - window.loaderEditarStartTime;
+    var remaining = Math.max(0, 300 - elapsed);
+    setTimeout(function() {
+        document.getElementById('loader-editar').style.display = 'none';
+    }, remaining);
+}
+
+function showLoaderExcluir() {
+    document.getElementById('loader-excluir').style.display = 'flex';
+    window.loaderExcluirStartTime = Date.now();
+}
+function hideLoaderExcluir() {
+    var elapsed = Date.now() - window.loaderExcluirStartTime;
+    var remaining = Math.max(0, 300 - elapsed);
+    setTimeout(function() {
+        document.getElementById('loader-excluir').style.display = 'none';
+    }, remaining);
+}
+
+function showLoaderDetalhes() {
+    document.getElementById('loader-detalhes').style.display = 'flex';
+    window.loaderDetalhesStartTime = Date.now();
+}
+function hideLoaderDetalhes() {
+    var elapsed = Date.now() - window.loaderDetalhesStartTime;
+    var remaining = Math.max(0, 300 - elapsed);
+    setTimeout(function() {
+        document.getElementById('loader-detalhes').style.display = 'none';
+    }, remaining);
+}
+
+// Manter as funções originais para ações fora de dialogs
+function showLoaderAndDisable(btnId) {
+    document.getElementById('global-loader').style.display = 'flex';
+    window.globalLoaderStartTime = Date.now();
+}
+function hideLoaderAndEnable(btnId) {
+    var elapsed = Date.now() - window.globalLoaderStartTime;
+    var remaining = Math.max(0, 300 - elapsed);
+    setTimeout(function() {
+        document.getElementById('global-loader').style.display = 'none';
+    }, remaining);
+}
+</h:outputScript>
 </h:body>
 </html>

@@ -17,7 +17,6 @@ import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
  *
  * Interface genérica para métodos de CRUD(Create, Read, Update and Delete)
  */
-
 public interface IGenericDAO <T extends Persistente, E extends Serializable> {
 
 	/**

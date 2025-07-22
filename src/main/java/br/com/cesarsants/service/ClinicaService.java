@@ -7,9 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeSet;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
 
 import br.com.cesarsants.dao.IClinicaDAO;
@@ -24,24 +22,28 @@ import br.com.cesarsants.exceptions.TableException;
 import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
 import br.com.cesarsants.services.generic.GenericService;
 
-/**
- * @author cesarsants
- *
- */
-
-@ApplicationScoped
 public class ClinicaService extends GenericService<Clinica, Long> implements IClinicaService {
     
     private final IClinicaDAO clinicaDAO;
-    private final IMedicoService medicoService;
+    private IMedicoService medicoService;
     private final IMedicoClinicaService medicoClinicaService;
       
-    @Inject
+    public ClinicaService() {
+        this(new br.com.cesarsants.dao.ClinicaDAO(), null, new br.com.cesarsants.service.MedicoClinicaService());
+    }
+
     public ClinicaService(IClinicaDAO clinicaDAO, IMedicoService medicoService, IMedicoClinicaService medicoClinicaService) {
         super(clinicaDAO);
         this.clinicaDAO = clinicaDAO;
         this.medicoService = medicoService;
         this.medicoClinicaService = medicoClinicaService;
+    }
+
+    private IMedicoService getMedicoService() {
+        if (medicoService == null) {
+            medicoService = new br.com.cesarsants.service.MedicoService();
+        }
+        return medicoService;
     }
 
     public Clinica buscarPorCNPJ(Long cnpj, Usuario usuario) throws DAOException {
@@ -62,11 +64,12 @@ public class ClinicaService extends GenericService<Clinica, Long> implements ICl
     
     private Usuario getUsuarioLogado() {
         FacesContext facesContext = FacesContext.getCurrentInstance();
-        if (facesContext != null) {
-            HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
-            if (session != null) {
-                return (Usuario) session.getAttribute("usuarioLogado");
-            }
+        if (facesContext == null) {
+            throw new IllegalStateException("getUsuarioLogado() chamado fora de contexto JSF! Não use este método em schedulers ou threads de background.");
+        }
+        HttpSession session = (HttpSession) facesContext.getExternalContext().getSession(false);
+        if (session != null) {
+            return (Usuario) session.getAttribute("usuarioLogado");
         }
         return null;
     }
@@ -108,7 +111,7 @@ public class ClinicaService extends GenericService<Clinica, Long> implements ICl
         try {
             // Busca a clínica e o médico
             Clinica clinica = super.consultar(clinicaId);
-            Medico medico = medicoService.consultar(medicoId);
+            Medico medico = getMedicoService().consultar(medicoId);
             
             if (clinica == null || medico == null) {
                 throw new DAOException("Clínica ou Médico não encontrados", null);
@@ -152,20 +155,52 @@ public class ClinicaService extends GenericService<Clinica, Long> implements ICl
                 .findFirst()
                 .orElseThrow(() -> new DAOException("Vínculo não encontrado", null));
             
-            // Remove o vínculo da coleção da clínica
-            clinica.getMedicosClinica().remove(vinculoParaRemover);
-            
-            // Atualiza a clínica
+            // Remove o vínculo da coleção da clínica usando o método auxiliar
+            clinica.removerMedicoClinica(vinculoParaRemover);
+
+            // Atualiza a clínica (merge)
             this.alterar(clinica);
-            
-            // Remove o vínculo
-            medicoClinicaService.excluir(vinculoParaRemover);
-            
         } catch (Exception e) {
             throw new DAOException("Erro ao desvincular médico da clínica: " + e.getMessage(), e);
         }
     }
 
+    /**
+     * Método específico para remover médico da clínica garantindo contexto de persistência
+     */
+    public void removerMedicoComContexto(Long clinicaId, Long medicoId) throws Exception {
+        try {
+            // Remove diretamente via DAO usando DELETE JPQL
+            ((br.com.cesarsants.service.MedicoClinicaService)medicoClinicaService).removerVinculo(clinicaId, medicoId);
+        } catch (Exception e) {
+            throw new DAOException("Erro ao desvincular médico da clínica: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void excluir(Clinica clinica) throws DAOException {
+        if (clinica == null || clinica.getId() == null) {
+            throw new DAOException("Clínica inválida para exclusão", null);
+        }
+
+        try {
+            // Verifica se a clínica tem agendamentos
+            IAgendaService agendaService = new br.com.cesarsants.service.AgendaService();
+            if (agendaService.clinicaTemAgendamentos(clinica.getId())) {
+                throw new DAOException("Não é possível excluir a clínica '" + clinica.getNome() + "' pois ela possui agendamentos registrados no sistema.", null);
+            }
+
+            // Se não houver agendamentos, prossegue com a exclusão
+            super.excluir(clinica);
+        } catch (DAOException e) {
+            // Propaga a exceção mantendo a mensagem original
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace(); // Log do erro para debug
+            throw new DAOException("Erro ao excluir clínica: " + e.getMessage(), e);
+        }
+    }
+    
     @Override
     public List<Clinica> buscarPorMedico(Long medicoId) {
         Usuario usuarioLogado = getUsuarioLogado();
@@ -193,7 +228,40 @@ public class ClinicaService extends GenericService<Clinica, Long> implements ICl
                 }
             }
 
-            // Se não houve mudança no número de salas, procede com a atualização normal
+            // Se não houve mudança no número de salas, busca a entidade atual e atualiza seus campos
+            if (clinica.getId() != null) {
+                Clinica clinicaAtual = super.consultar(clinica.getId());
+                if (clinicaAtual != null) {
+                    // Atualiza todos os campos da entidade gerenciada
+                    clinicaAtual.setNome(clinica.getNome());
+                    clinicaAtual.setCnpj(clinica.getCnpj());
+                    clinicaAtual.setEndereco(clinica.getEndereco());
+                    clinicaAtual.setHorarioAbertura(clinica.getHorarioAbertura());
+                    clinicaAtual.setHorarioFechamento(clinica.getHorarioFechamento());
+                    clinicaAtual.setNumeroTotalSalas(clinica.getNumeroTotalSalas());
+                    
+                    // Atualiza as salas se fornecidas
+                    if (clinica.getSalas() != null && !clinica.getSalas().isEmpty()) {
+                        // Atualiza as salas existentes
+                        for (Sala salaClinica : clinica.getSalas()) {
+                            Sala salaAtual = clinicaAtual.getSalas().stream()
+                                .filter(s -> s.getId().equals(salaClinica.getId()))
+                                .findFirst()
+                                .orElse(null);
+                            
+                            if (salaAtual != null) {
+                                salaAtual.setNome(salaClinica.getNome());
+                                salaAtual.setOrdem(salaClinica.getOrdem());
+                            }
+                        }
+                    }
+                    
+                    // Faz o merge da entidade gerenciada
+                    return super.alterar(clinicaAtual);
+                }
+            }
+
+            // Fallback: se não conseguiu buscar a entidade atual, usa o merge normal
             return super.alterar(clinica);
         } catch (MaisDeUmRegistroException | TableException e) {
             throw new DAOException("Erro ao alterar clínica: " + e.getMessage(), e);
@@ -227,8 +295,21 @@ public class ClinicaService extends GenericService<Clinica, Long> implements ICl
             List<Sala> salasAtuais = new ArrayList<>(clinica.getSalas());
             salasAtuais.sort(Comparator.comparing(Sala::getOrdem, Comparator.nullsLast(Integer::compareTo)));
             
-            // Caso de diminuição do número de salas
+                        // Caso de diminuição do número de salas
             if (salasAtuais.size() > novoNumeroTotalSalas) {
+                // Verifica se as salas que serão excluídas têm agendamentos
+                List<Sala> salasParaExcluir = salasAtuais.subList(novoNumeroTotalSalas, salasAtuais.size());
+                
+                // Verifica cada sala que será excluída
+                for (Sala sala : salasParaExcluir) {
+                    boolean temAgendamentos = new br.com.cesarsants.service.AgendaService().salaTemAgendamentos(sala.getId());
+                    
+                    if (temAgendamentos) {
+                        throw new DAOException("Não é possível reduzir o número de salas. A sala '" + 
+                                             sala.getNome() + "' possui agendamentos registrados no sistema.", null);
+                    }
+                }
+                
                 // Remove as salas excedentes (mantém as N primeiras)
                 List<Sala> salasPreservadas = salasAtuais.subList(0, novoNumeroTotalSalas);
                 clinica.getSalas().clear();

@@ -11,10 +11,9 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.http.HttpSession;
 
 import br.com.cesarsants.domain.Clinica;
@@ -26,14 +25,9 @@ import br.com.cesarsants.exceptions.MaisDeUmRegistroException;
 import br.com.cesarsants.exceptions.TableException;
 import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
 import br.com.cesarsants.service.IClinicaService;
-import br.com.cesarsants.service.IMedicoService;
+import br.com.cesarsants.service.MedicoService;
 
-/**
- * @author cesarsants
- *
- */
-
-@Named
+@ManagedBean(name = "clinicaController")
 @ViewScoped
 public class ClinicaController implements Serializable {
 
@@ -65,11 +59,9 @@ public class ClinicaController implements Serializable {
     
     private Sala selectedSala;
     
-    @Inject
-    private IClinicaService clinicaService;
+    private final IClinicaService clinicaService = new br.com.cesarsants.service.ClinicaService();
     
-    @Inject
-    private IMedicoService medicoService;
+    private MedicoService medicoService = new MedicoService();
 
     // Novo campo para busca por horário
     private LocalTime searchTime;
@@ -106,6 +98,7 @@ public class ClinicaController implements Serializable {
             this.clinica.setEndereco(clinica.getEndereco());
             this.clinica.setHorarioAbertura(clinica.getHorarioAbertura());
             this.clinica.setHorarioFechamento(clinica.getHorarioFechamento());
+            this.clinica.setNumeroTotalSalas(clinica.getNumeroTotalSalas());
             this.clinica.setUsuario(clinica.getUsuario());
             this.cnpjMask = clinica.getCnpj() != null ? clinica.getCnpj().toString() : "";
         } catch(Exception e) {
@@ -121,9 +114,14 @@ public class ClinicaController implements Serializable {
             this.clinicasExibidas.remove(clinica);
             FacesContext.getCurrentInstance().addMessage(null, 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Clínica excluída com sucesso"));
-        } catch (Exception e) {
+        } catch (DAOException e) {
+            // Exibe a mensagem personalizada do service
             FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", e.getMessage()));
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Não foi possível excluir a clínica", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace(); // Log do erro para debug
+            FacesContext.getCurrentInstance().addMessage(null, 
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro inesperado", "Ocorreu um erro ao tentar excluir a clínica"));
         }
     }
     
@@ -243,7 +241,7 @@ public class ClinicaController implements Serializable {
         }
     }    public void desvincularMedico(Medico medico) {
         try {
-            clinicaService.removerMedico(selectedClinica.getId(), medico.getId());
+            clinicaService.removerMedicoComContexto(selectedClinica.getId(), medico.getId());
             
             // Atualiza os dados
             this.selectedClinica = clinicaService.consultar(selectedClinica.getId());

@@ -1,28 +1,24 @@
 package br.com.cesarsants.service;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-
 import br.com.cesarsants.dao.IEmailConfirmacaoDAO;
 import br.com.cesarsants.domain.EmailConfirmacao;
 import br.com.cesarsants.exceptions.BusinessException;
 import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
 
-/**
- * @author cesarsants
- *
- */
-
-@ApplicationScoped
 public class EmailConfirmacaoService implements IEmailConfirmacaoService {
     
-    @Inject
     private IEmailConfirmacaoDAO emailConfirmacaoDAO;
+
+    public EmailConfirmacaoService() {
+        this(new br.com.cesarsants.dao.EmailConfirmacaoDAO());
+    }
+
+    public EmailConfirmacaoService(IEmailConfirmacaoDAO emailConfirmacaoDAO) {
+        this.emailConfirmacaoDAO = emailConfirmacaoDAO;
+    }
     
     @Override
-    @Transactional
     public EmailConfirmacao salvarCodigo(String email, String codigo) throws BusinessException {
         try {
             System.out.println("=== SALVANDO CÓDIGO ===");
@@ -53,21 +49,36 @@ public class EmailConfirmacaoService implements IEmailConfirmacaoService {
     @Override
     public boolean validarCodigo(String email, String codigo) throws BusinessException {
         try {
+            System.out.println("=== VALIDANDO CÓDIGO ===");
+            System.out.println("Email: " + email);
+            System.out.println("Código digitado: " + codigo);
+            
             EmailConfirmacao confirmacao = emailConfirmacaoDAO.buscarPorEmail(email);
             
             if (confirmacao == null) {
+                System.out.println("Nenhuma confirmação encontrada para o email: " + email);
                 return false;
             }
             
+            System.out.println("Confirmação encontrada:");
+            System.out.println("- ID: " + confirmacao.getId());
+            System.out.println("- Email: " + confirmacao.getEmail());
+            System.out.println("- Código salvo: " + confirmacao.getCodigo());
+            System.out.println("- Código digitado: " + codigo);
+            System.out.println("- Códigos iguais: " + confirmacao.getCodigo().equals(codigo));
+            System.out.println("- Pode ser confirmado: " + confirmacao.podeSerConfirmado());
+            
             // Verifica se o código está correto e não expirou
-            return confirmacao.getCodigo().equals(codigo) && confirmacao.podeSerConfirmado();
+            boolean resultado = confirmacao.getCodigo().equals(codigo) && confirmacao.podeSerConfirmado();
+            System.out.println("Resultado da validação: " + resultado);
+            return resultado;
         } catch (DAOException e) {
+            System.err.println("Erro ao validar código: " + e.getMessage());
             throw new BusinessException("Erro ao validar código de confirmação", e);
         }
     }
     
     @Override
-    @Transactional
     public boolean confirmarEmail(String email) throws BusinessException {
         try {
             EmailConfirmacao confirmacao = emailConfirmacaoDAO.buscarPorEmail(email);
@@ -85,7 +96,6 @@ public class EmailConfirmacaoService implements IEmailConfirmacaoService {
     }
     
     @Override
-    @Transactional
     public int limparExpirados() throws BusinessException {
         try {
             return emailConfirmacaoDAO.removerExpirados();

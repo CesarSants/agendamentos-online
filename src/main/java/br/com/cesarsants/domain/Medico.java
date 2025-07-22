@@ -18,11 +18,6 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-/**
- * @author cesarsants
- *
- */
-
 @Entity
 @Table(name = "TB_MEDICO")
 @NamedQuery(name = "Medico.findByNome", query = "SELECT m FROM Medico m WHERE m.nome LIKE :nome")

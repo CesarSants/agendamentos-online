@@ -6,11 +6,6 @@ import br.com.cesarsants.dao.generic.IGenericDAO;
 import br.com.cesarsants.domain.Medico;
 import br.com.cesarsants.domain.Usuario;
 
-/**
- * @author cesarsants
- *
- */
-
 public interface IMedicoDAO extends IGenericDAO<Medico, Long> {
     List<Medico> filtrarMedicos(String query, Usuario usuario);
     List<Medico> buscarPorClinica(Long clinicaId, Usuario usuario);

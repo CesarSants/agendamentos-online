@@ -1,21 +1,240 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:f="http://xmlns.jcp.org/jsf/core"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
       xmlns:p="http://primefaces.org/ui">
     
+    <!-- Polling pós-inatividade: timeout 30min backend, polling após 31min, debounce 2min, sincronizado -->
+    <h:outputScript>
+        console.log('Polling pós-inatividade carregado');
+        var SESSION_TIMEOUT_MINUTES = 30;
+        var POLLING_DELAY_MS = 31 * 60 * 1000; // 31 minutos
+        var pollingTimeoutId = null;
+        var debounceId = null;
+        var DEBOUNCE_DELAY = 2 * 1 * 1000; // 2 minutos
+        var pollingAtivo = false;
+
+        // Verifica se o usuário está logado antes de ativar o polling
+        function verificarUsuarioLogado() {
+            // Verifica se existe o elemento que indica que o usuário está logado
+            var userSection = document.querySelector('.user-section');
+            return userSection !== null &amp;&amp; userSection.style.display !== 'none';
+        }
+
+        function ativarPolling() {
+            if (!verificarUsuarioLogado()) {
+                console.log('Usuário não está logado. Polling desativado.');
+                return;
+            }
+            
+            if (pollingAtivo) {
+                console.log('Polling já está ativo.');
+                return;
+            }
+            
+            pollingAtivo = true;
+            console.log('Polling ativado para usuário logado.');
+            schedulePolling();
+        }
+
+        function desativarPolling() {
+            if (pollingTimeoutId) {
+                clearTimeout(pollingTimeoutId);
+                pollingTimeoutId = null;
+            }
+            if (debounceId) {
+                clearTimeout(debounceId);
+                debounceId = null;
+            }
+            pollingAtivo = false;
+            console.log('Polling desativado.');
+        }
+
+        function schedulePolling() {
+            if (!pollingAtivo) {
+                console.log('Polling não está ativo. Cancelando agendamento.');
+                return;
+            }
+            
+            if (pollingTimeoutId) {
+                clearTimeout(pollingTimeoutId);
+            }
+            console.log('Agendando polling para', POLLING_DELAY_MS / 1000, 'segundos');
+            pollingTimeoutId = setTimeout(function() {
+                if (!pollingAtivo) {
+                    console.log('Polling foi desativado durante o agendamento.');
+                    return;
+                }
+                
+                console.log('Executando polling para /session/checkStatus.xhtml');
+                fetch('#{request.contextPath}/session/checkStatus.xhtml?inactivityCheck=true')
+                    .then(resp => resp.text())
+                    .then(text => {
+                        console.log('Resposta do polling:', text);
+                        if (!text.includes('SESSION_OK')) {
+                            console.log('Sessão expirada detectada pelo polling. Desativando polling e recarregando página.');
+                            desativarPolling();
+                            window.location.reload();
+                        } else {
+                            console.log('Sessão ainda ativa. Reiniciando polling.');
+                            schedulePolling();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erro ao fazer polling:', err);
+                        desativarPolling();
+                    });
+            }, POLLING_DELAY_MS);
+        }
+
+        function resetPollingOnUserAction() {
+            if (!pollingAtivo) {
+                return;
+            }
+            
+            // Verifica se é uma requisição do sistema de atualização automática da agenda
+            if (window.isSystemPolling) {
+                console.log('Ignorando ação do sistema de atualização automática da agenda');
+                return;
+            }
+            
+            if (debounceId) clearTimeout(debounceId);
+            debounceId = setTimeout(function() {
+                // PING para o backend para renovar a sessão
+                fetch('#{request.contextPath}/session/checkStatus.xhtml?inactivityCheck=true')
+                    .then(resp => resp.text())
+                    .then(text => {
+                        if (!text.includes('SESSION_OK')) {
+                            console.log('Sessão expirada detectada por ação do usuário. Desativando polling e recarregando página.');
+                            desativarPolling();
+                            window.location.reload();
+                        } else {
+                            schedulePolling();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erro ao fazer ping:', err);
+                        desativarPolling();
+                    });
+            }, DEBOUNCE_DELAY);
+        }
+
+        // Só monitora scroll, clique e teclado se o polling estiver ativo
+        ['click', 'keydown', 'scroll'].forEach(function(event) {
+            window.addEventListener(event, resetPollingOnUserAction, true);
+        });
+
+        // Verifica se deve ativar o polling ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                if (verificarUsuarioLogado()) {
+                    ativarPolling();
+                } else {
+                    console.log('Usuário não está logado. Polling não será ativado.');
+                }
+            }, 1000); // Aguarda 1 segundo para garantir que a página carregou completamente
+        });
+
+        // Função global para ativar/desativar polling (pode ser chamada por outros scripts)
+        window.ativarPollingSistema = ativarPolling;
+        window.desativarPollingSistema = desativarPolling;
+    </h:outputScript>
+    
+    <!-- Loader global para navegação -->
+    <div id="global-loader" class="action-loader" style="display:none;">
+        <div class="loader-content">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Carregando...</div>
+        </div>
+    </div>
+    
+    <h:outputScript>
+        function showNavigationLoader() {
+            document.getElementById('global-loader').style.display = 'flex';
+            window.navigationLoaderStartTime = Date.now();
+        }
+        
+        function hideNavigationLoader() {
+            var elapsed = Date.now() - window.navigationLoaderStartTime;
+            var remaining = Math.max(0, 300 - elapsed);
+            setTimeout(function() {
+                document.getElementById('global-loader').style.display = 'none';
+            }, remaining);
+        }
+        
+        // Esconde o loader quando a página terminar de carregar
+        window.addEventListener('load', function() {
+            if (window.navigationLoaderStartTime) {
+                hideNavigationLoader();
+            }
+        });
+        
+        // Esconde o loader se já estiver visível ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            var loader = document.getElementById('global-loader');
+            if (loader &amp;&amp; loader.style.display === 'flex') {
+                setTimeout(function() {
+                    loader.style.display = 'none';
+                }, 300);
+            }
+        });
+    </h:outputScript>
+    
+    <h:form id="sessionForm" style="display:none">
+        <p:commandButton id="extendSessionBtn"
+            action="#{sessionController.extendSession}"
+            process="@this"
+            update="@none"
+            style="display:none" />
+    </h:form>
+    <script type="text/javascript">
+//<![CDATA[
+window.__SESSION_DEBOUNCE__ = window.__SESSION_DEBOUNCE__ || {
+    lastPing: 0,
+    interval: 2 * 60 * 1000 // 2 minutos
+};
+
+function sendPing() {
+    var now = Date.now();
+    if (now - window.__SESSION_DEBOUNCE__.lastPing < window.__SESSION_DEBOUNCE__.interval) return;
+    window.__SESSION_DEBOUNCE__.lastPing = now;
+    if (window.PrimeFaces && PrimeFaces.ab) {
+        console.log('[PING] Disparando ping de sessão!');
+        PrimeFaces.ab({
+            s: 'sessionForm:extendSessionBtn',
+            f: 'sessionForm',
+            u: ''
+        });
+    }
+}
+
+function debouncedPing() {
+    sendPing();
+}
+
+window.addEventListener('scroll', debouncedPing, true);
+window.addEventListener('click', debouncedPing, true);
+window.addEventListener('keydown', debouncedPing, true);
+window.addEventListener('submit', debouncedPing, true);
+// NÃO adicionar mousemove!
+//]]>
+    </script>
+    
     <div class="menu-container">
         <h:form id="menuForm">
             <p:menubar styleClass="custom-menubar">
                 <p:menuitem value="Pacientes" outcome="/paciente/list" icon="pi pi-users" 
-                    styleClass="#{facesContext.viewRoot.viewId eq '/paciente/list.xhtml' ? 'active-menu-item' : ''}" />
+                    styleClass="#{facesContext.viewRoot.viewId eq '/paciente/list.xhtml' ? 'active-menu-item' : ''}"
+                    onclick="showNavigationLoader()" />
                 <p:menuitem value="Médicos" outcome="/medico/list" icon="pi pi-user" 
-                    styleClass="#{facesContext.viewRoot.viewId eq '/medico/list.xhtml' ? 'active-menu-item' : ''}" />
+                    styleClass="#{facesContext.viewRoot.viewId eq '/medico/list.xhtml' ? 'active-menu-item' : ''}"
+                    onclick="showNavigationLoader()" />
                 <p:menuitem value="Clínicas" outcome="/clinica/list" icon="pi pi-building" 
-                    styleClass="#{facesContext.viewRoot.viewId eq '/clinica/list.xhtml' ? 'active-menu-item' : ''}" />
+                    styleClass="#{facesContext.viewRoot.viewId eq '/clinica/list.xhtml' ? 'active-menu-item' : ''}"
+                    onclick="showNavigationLoader()" />
                 <p:menuitem value="Agendamentos" outcome="/agenda/list" icon="pi pi-calendar" 
-                    styleClass="#{facesContext.viewRoot.viewId eq '/agenda/list.xhtml' ? 'active-menu-item' : ''}" />
+                    styleClass="#{facesContext.viewRoot.viewId eq '/agenda/list.xhtml' ? 'active-menu-item' : ''}"
+                    onclick="showNavigationLoader()" />
             </p:menubar>
         </h:form>
         
@@ -26,7 +245,7 @@
                     Olá, #{sessionScope.usuarioLogado.nome}
                 </span>
                 <h:form>
-                    <p:commandButton value="Sair" action="# {authController.logout}" 
+                    <p:commandButton value="Sair" action="#{authController.logout}" 
                         icon="pi pi-sign-out" styleClass="logout-btn"
                         onclick="PF('logoutDialog').show(); return false;" type="button" />
                 </h:form>
@@ -42,7 +261,7 @@
         </h:form>
     </p:confirmDialog>
     
-    <style>
+    <h:outputStylesheet>
         .menu-container {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
@@ -189,5 +408,160 @@
             border-radius: 16px !important;
             outline: none !important;
         }
-    </style>
-</html>
+        
+        /* CSS para o loader de navegação - igual ao componente médico */
+        .action-loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Previne scroll indesejado */
+            overflow: hidden;
+            /* Garante que o loader ocupe exatamente a viewport */
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #764ba2;
+            border-top: 6px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 18px;
+            box-shadow: 0 0 20px #667eea44;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .custom-loader-text {
+            color: #764ba2;
+            font-size: 1.3em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px #667eea44, 0 0 2px #764ba2;
+        }
+        
+        /* ===== RESPONSIVIDADE DO MENU ===== */
+        
+        /* Tablets (768px até 1024px) */
+        @media (max-width: 1024px) {
+            .menu-container {
+                padding: 0 15px;
+            }
+            
+            .custom-menubar .ui-menubar-root-list {
+                gap: 12px !important;
+            }
+            
+            .custom-menubar .p-menuitem-link {
+                padding: 6px 10px !important;
+                font-size: 14px !important;
+            }
+            
+            .user-greeting {
+                font-size: 16px;
+            }
+            
+            .logout-btn {
+                padding: 6px 12px !important;
+                font-size: 14px !important;
+            }
+        }
+        
+        /* Mobile (até 767px) */
+        @media (max-width: 767px) {
+            .menu-container {
+                flex-direction: column;
+                padding: 10px 15px;
+                gap: 10px;
+            }
+            
+            .custom-menubar {
+                width: 100%;
+            }
+            
+            .custom-menubar .ui-menubar-root-list {
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 8px !important;
+            }
+            
+            .custom-menubar .p-menuitem-link {
+                padding: 8px 12px !important;
+                font-size: 13px !important;
+                min-width: 80px;
+                text-align: center;
+            }
+            
+            .custom-menubar .p-menuitem-icon {
+                font-size: 14px !important;
+                margin-right: 4px !important;
+            }
+            
+            .user-section {
+                flex-direction: column;
+                gap: 8px;
+                align-items: center;
+                width: 100%;
+            }
+            
+            .user-greeting {
+                font-size: 14px;
+                text-align: center;
+            }
+            
+            .logout-btn {
+                padding: 8px 16px !important;
+                font-size: 13px !important;
+                min-width: 80px;
+            }
+        }
+        
+        /* Mobile pequeno (até 480px) */
+        @media (max-width: 480px) {
+            .menu-container {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+            
+            .custom-menubar .ui-menubar-root-list {
+                gap: 6px !important;
+            }
+            
+            .custom-menubar .p-menuitem-link {
+                padding: 6px 8px !important;
+                font-size: 12px !important;
+                min-width: 70px;
+            }
+            
+            .custom-menubar .p-menuitem-icon {
+                font-size: 12px !important;
+                margin-right: 3px !important;
+            }
+            
+            .user-greeting {
+                font-size: 13px;
+            }
+            
+            .logout-btn {
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+                min-width: 70px;
+            }
+        }
+    </h:outputStylesheet>
+    
+
+</ui:composition>

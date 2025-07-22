@@ -13,11 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-/**
- * @author cesarsants
- *
- */
-
 @WebFilter(urlPatterns = {"/index.xhtml"})
 public class LoginPageRedirectFilter implements Filter {
 
@@ -32,7 +27,13 @@ public class LoginPageRedirectFilter implements Filter {
 		
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
 		HttpServletResponse httpResponse = (HttpServletResponse) response;
-		HttpSession session = httpRequest.getSession(false);
+		
+		// Sempre cria uma nova sessão HTTP se não existir (evita o limbo)
+		HttpSession session = httpRequest.getSession(true);
+		// NOVO: marca a sessão como pública
+		session.setAttribute("isPublicSession", true);
+		// NOVO: desabilita timeout para sessão pública
+		session.setMaxInactiveInterval(-1); // nunca expira
 		
 		// Verifica se o usuário está logado
 		boolean isLoggedIn = (session != null && session.getAttribute("usuarioLogado") != null);
@@ -42,6 +43,7 @@ public class LoginPageRedirectFilter implements Filter {
 			httpResponse.sendRedirect(httpRequest.getContextPath() + "/paciente/list.xhtml");
 		} else {
 			// Usuário não está logado, permite o acesso à página de login
+			// A sessão já foi criada acima, então não há risco de limbo
 			chain.doFilter(request, response);
 		}
 	}

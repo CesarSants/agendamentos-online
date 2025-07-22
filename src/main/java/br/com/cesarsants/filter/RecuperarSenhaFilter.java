@@ -14,10 +14,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 /**
- * @author cesarsants
- *
+ * Filtro para proteger a página de recuperação de senha
+ * Só permite acesso se houver um atributo de sessão 'recuperacaoSenhaAtiva'
  */
-
 @WebFilter(urlPatterns = {"/recuperarSenha.xhtml"})
 public class RecuperarSenhaFilter implements Filter {
 
@@ -33,6 +32,11 @@ public class RecuperarSenhaFilter implements Filter {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             HttpServletResponse httpResponse = (HttpServletResponse) response;
             HttpSession session = httpRequest.getSession(false);
+            // NOVO: marca a sessão como pública, se existir
+            if (session != null) {
+                session.setAttribute("isPublicSession", true);
+                session.setMaxInactiveInterval(-1); // nunca expira
+            }
 
             boolean acessoPermitido = (session != null && session.getAttribute("recuperacaoSenhaAtiva") != null);
 

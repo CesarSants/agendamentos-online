@@ -18,6 +18,7 @@
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
+            overflow: hidden;
         }
         .recuperar-container {
             background: white;
@@ -139,8 +140,76 @@
                 <label for="confirmarSenha">Confirmar Nova Senha:</label>
                 <p:password id="confirmarSenha" value="#{recuperarSenhaController.confirmarSenha}" placeholder="Confirme a nova senha" />
             </div>
-            <p:commandButton value="Enviar" action="#{recuperarSenhaController.enviar}" styleClass="btn-primary" update="@form" />
-        </h:form>
+			<p:commandButton id="enviarBtn" value="Enviar" action="#{recuperarSenhaController.enviar}" styleClass="btn-primary" update="@form"
+                onclick="showLoaderAndDisable(this.id)" oncomplete="hideLoaderAndEnable(this.id)" />        </h:form>
     </div>
+    
+    <h:outputScript>
+    function showLoaderAndDisable(btnId) {
+        var btn = document.getElementById(btnId);
+        if (btn) btn.disabled = true;
+        PF('globalLoader').show();
+    }
+    function hideLoaderAndEnable(btnId) {
+        var btn = document.getElementById(btnId);
+        if (btn) btn.disabled = false;
+        PF('globalLoader').hide();
+    }
+    </h:outputScript>
+    
+    <p:blockUI block="@all" widgetVar="globalLoader" styleClass="custom-loader-overlay">
+        <div class="custom-loader-container">
+            <div class="custom-spinner"></div>
+            <div class="custom-loader-text">Carregando...</div>
+        </div>
+    </p:blockUI>
+    
+    <h:outputStylesheet>
+    .custom-loader-overlay {
+		background: rgba(0, 0, 0, 0.7) !important;
+		background-color: rgba(0, 0, 0, 0.7) !important;
+		z-index: 9999 !important;
+	}
+	.custom-loader-container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		height: 100vh;
+		width: 100vw;
+		overflow: hidden;
+		pointer-events: auto !important;
+	}
+	
+	.ui-widget-content{
+			background: rgba(0, 0, 0, 0.4);
+		}
+		
+		.ui-blockui-content{
+			padding: 0;
+		}
+		
+	.custom-spinner {
+		width: 60px;
+		height: 60px;
+		border: 6px solid #764ba2;
+		border-top: 6px solid transparent;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+		margin-bottom: 18px;
+		box-shadow: 0 0 20px #667eea44;
+	}
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+	.custom-loader-text {
+		color: #764ba2;
+		font-size: 1.3em;
+		font-weight: bold;
+		letter-spacing: 1px;
+		text-shadow: 0 2px 8px #667eea44, 0 0 2px #764ba2;
+	}
+    </h:outputStylesheet>
 </h:body>
 </html> 

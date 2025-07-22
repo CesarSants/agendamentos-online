@@ -6,10 +6,9 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.servlet.http.HttpSession;
 
 import br.com.cesarsants.domain.Medico;
@@ -17,12 +16,7 @@ import br.com.cesarsants.domain.Usuario;
 import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.service.IMedicoService;
 
-/**
- * @author cesarsants
- *
- */
-
-@Named
+@ManagedBean(name = "medicoController")
 @ViewScoped
 public class MedicoController implements Serializable {
 
@@ -32,8 +26,7 @@ public class MedicoController implements Serializable {
     private Collection<Medico> medicos;
     private Collection<Medico> medicosExibidos;
     
-    @Inject
-    private IMedicoService medicoService;
+    private final IMedicoService medicoService = new br.com.cesarsants.service.MedicoService();
     
     private Boolean isUpdate;
     private String cpfMask;
@@ -55,14 +48,6 @@ public class MedicoController implements Serializable {
         }
     }
     
-    // Método utilitário para formatar CRM com máscara
-    public String formatarCrm(Long crm) {
-        if (crm == null) return "";
-        String crmStr = String.format("%06d", crm);
-        return crmStr.substring(0, 2) + "." +
-               crmStr.substring(2, 6);
-    }
-
     // Método utilitário para formatar CPF com máscara
     public String formatarCpf(Long cpf) {
         if (cpf == null) return "";
@@ -109,8 +94,9 @@ public class MedicoController implements Serializable {
             FacesContext.getCurrentInstance().addMessage("msgs", 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Médico excluído com sucesso"));
         } catch(DAOException e) {
+            // Exibe a mensagem personalizada do service
             FacesContext.getCurrentInstance().addMessage("msgs", 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Não foi possível excluir", e.getMessage()));
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Não foi possível excluir o médico", e.getMessage()));
         } catch(Exception e) {
             e.printStackTrace(); // Log do erro para debug
             FacesContext.getCurrentInstance().addMessage("msgs", 
@@ -191,12 +177,12 @@ public class MedicoController implements Serializable {
                     switch (searchType) {
                         case "nome":
                             return m.getNome().toLowerCase().contains(searchText.toLowerCase());
-                        case "crm":
+                        case "cpf":
                             if (m.getCpf() == null) return false;
-                            String crmSearch = searchText.replaceAll("[^0-9]", "");
-                            String crmValue = String.valueOf(m.getCpf());
-                            return crmValue.contains(crmSearch);
-                        case "especialidade":
+                            String cpfSearch = searchText.replaceAll("[^0-9]", "");
+                            String cpfValue = String.valueOf(m.getCpf());
+                            return cpfValue.contains(cpfSearch);
+                        case "endereco":
                             return m.getEndereco() != null && 
                                    m.getEndereco().toLowerCase().contains(searchText.toLowerCase());
                         default:

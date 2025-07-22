@@ -12,7 +12,6 @@ import javax.persistence.Table;
  * @author cesarsants
  *
  */
-
 @Entity
 @Table(name = "TB_USUARIO")
 public class Usuario implements Persistente {

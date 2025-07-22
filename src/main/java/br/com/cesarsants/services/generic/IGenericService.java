@@ -16,7 +16,6 @@ import br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException;
  * @author cesarsants
  *
  */
-
 public interface IGenericService <T extends Persistente, E extends Serializable> {
 	
 	/**

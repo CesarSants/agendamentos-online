@@ -6,20 +6,15 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 import br.com.cesarsants.domain.Paciente;
+import br.com.cesarsants.exceptions.DAOException;
 import br.com.cesarsants.service.IPacienteService;
 
-/**
- * @author cesarsants
- *
- */
-
-@Named
+@ManagedBean(name = "pacienteController")
 @ViewScoped
 public class PacienteController implements Serializable {
 
@@ -29,8 +24,7 @@ public class PacienteController implements Serializable {
     private Collection<Paciente> pacientes;
     private Collection<Paciente> pacientesExibidos;
     
-    @Inject
-    private IPacienteService pacienteService;
+    private final IPacienteService pacienteService = new br.com.cesarsants.service.PacienteService();
     
     private Boolean isUpdate;
     private String cpfMask;
@@ -142,11 +136,17 @@ public class PacienteController implements Serializable {
         try {
             pacienteService.excluir(paciente);
             this.pacientes.remove(paciente);
+            this.pacientesExibidos.remove(paciente); // Atualiza também a lista filtrada
             FacesContext.getCurrentInstance().addMessage("msgs", 
                 new FacesMessage(FacesMessage.SEVERITY_INFO, "Sucesso", "Paciente excluído com sucesso"));
-        } catch(Exception e) {
+        } catch(DAOException e) {
+            // Exibe a mensagem personalizada do service
             FacesContext.getCurrentInstance().addMessage("msgs", 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", e.getMessage()));
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Não foi possível excluir o paciente", e.getMessage()));
+        } catch(Exception e) {
+            e.printStackTrace(); // Log do erro para debug
+            FacesContext.getCurrentInstance().addMessage("msgs", 
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro inesperado", "Ocorreu um erro ao tentar excluir o paciente"));
         }
     }
     

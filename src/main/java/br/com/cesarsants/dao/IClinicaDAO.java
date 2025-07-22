@@ -7,11 +7,6 @@ import br.com.cesarsants.dao.generic.IGenericDAO;
 import br.com.cesarsants.domain.Clinica;
 import br.com.cesarsants.domain.Usuario;
 
-/**
- * @author cesarsants
- *
- */
-
 public interface IClinicaDAO extends IGenericDAO<Clinica, Long> {
     List<Clinica> filtrarClinicas(String query, Usuario usuario);
     boolean isSalaDisponivel(Long clinicaId, Integer numeroSala, LocalDateTime horario, Integer duracaoConsulta, Usuario usuario);

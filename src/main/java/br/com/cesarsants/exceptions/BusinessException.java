@@ -1,10 +1,5 @@
 package br.com.cesarsants.exceptions;
 
-/**
- * @author cesarsants
- *
- */
-
 public class BusinessException extends Exception {
     private static final long serialVersionUID = 1L;
 

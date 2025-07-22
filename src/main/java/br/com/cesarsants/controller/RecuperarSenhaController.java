@@ -4,24 +4,18 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import javax.annotation.PostConstruct;
-import javax.enterprise.context.SessionScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
-import javax.inject.Named;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 
 import br.com.cesarsants.domain.Usuario;
 import br.com.cesarsants.exceptions.BusinessException;
 import br.com.cesarsants.service.EmailService;
 import br.com.cesarsants.service.IEmailConfirmacaoService;
-import br.com.cesarsants.service.IUsuarioService;
+import br.com.cesarsants.service.UsuarioService;
 
-/**
- * @author cesarsants
- *
- */
-
-@Named
+@ManagedBean(name = "recuperarSenhaController")
 @SessionScoped
 public class RecuperarSenhaController implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -34,14 +28,11 @@ public class RecuperarSenhaController implements Serializable {
     private String emailParaAlteracao;
     private String novaSenhaParaAlteracao;
 
-    @Inject
-    private IUsuarioService usuarioService;
+    private UsuarioService usuarioService = new UsuarioService(new br.com.cesarsants.dao.UsuarioDAO());
 
-    @Inject
-    private IEmailConfirmacaoService emailConfirmacaoService;
+    private final IEmailConfirmacaoService emailConfirmacaoService = new br.com.cesarsants.service.EmailConfirmacaoService();
 
-    @Inject
-    private EmailService emailService;
+    private final EmailService emailService = new br.com.cesarsants.service.EmailService();
 
     @PostConstruct
     public void init() {

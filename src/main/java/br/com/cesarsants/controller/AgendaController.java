@@ -21,12 +21,11 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.faces.application.FacesMessage;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ViewScoped;
 import javax.faces.component.UIInput;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
-import javax.faces.view.ViewScoped;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 import org.primefaces.PrimeFaces;
 
@@ -39,19 +38,18 @@ import br.com.cesarsants.domain.Usuario;
 import br.com.cesarsants.exceptions.BusinessException;
 import br.com.cesarsants.service.AgendaAutoCompletionScheduler;
 import br.com.cesarsants.service.AutoCompletionSessionManager;
+import br.com.cesarsants.service.ClinicaService;
 import br.com.cesarsants.service.IAgendaService;
 import br.com.cesarsants.service.IClinicaService;
 import br.com.cesarsants.service.IMedicoService;
 import br.com.cesarsants.service.IPacienteService;
 import br.com.cesarsants.service.ISalaService;
 import br.com.cesarsants.service.IUsuarioService;
+import br.com.cesarsants.service.MedicoService;
+import br.com.cesarsants.service.PacienteService;
+import br.com.cesarsants.service.SalaService;
 
-/**
- * @author cesarsants
- *
- */
-
-@Named
+@ManagedBean(name = "agendaController")
 @ViewScoped
 public class AgendaController implements Serializable {
     
@@ -108,28 +106,20 @@ public class AgendaController implements Serializable {
     private boolean sistemaAtualizacaoAtivo = true; 
     private ScheduledExecutorService scheduler;
     
-    @Inject
-    private AgendaAutoCompletionScheduler autoCompletionScheduler;
+    // Substitua as injeções por:
+    private final AgendaAutoCompletionScheduler autoCompletionScheduler = br.com.cesarsants.service.AgendaAutoCompletionScheduler.getInstance();
+    private final AutoCompletionSessionManager sessionManager = br.com.cesarsants.service.AutoCompletionSessionManager.getInstance();
     
-    @Inject
-    private AutoCompletionSessionManager sessionManager;
+    private final IAgendaService agendaService = new br.com.cesarsants.service.AgendaService();
     
-    @Inject
-    private IAgendaService agendaService;
+    private IClinicaService clinicaService = new ClinicaService();
     
-    @Inject
-    private IClinicaService clinicaService;
+    private IMedicoService medicoService = new MedicoService();
     
-    @Inject
-    private IMedicoService medicoService;
-    
-    @Inject
-    private IPacienteService pacienteService;
+    private IPacienteService pacienteService = new PacienteService();
 
-    @Inject
-    private ISalaService salaService;
+    private ISalaService salaService = new SalaService();
     
-    @Inject
     private IUsuarioService usuarioService;
 
     private String searchEntityType = "data";
@@ -144,6 +134,8 @@ public class AgendaController implements Serializable {
     @PostConstruct
     public void init() {
         try {
+        	this.usuarioService = new br.com.cesarsants.service.UsuarioService(new br.com.cesarsants.dao.UsuarioDAO());
+        	
             this.isUpdate = false;
             this.agendamentos = agendaService.buscarTodosComRelacionamentos();
             this.clinicas = clinicaService.buscarTodos();
@@ -187,8 +179,10 @@ public class AgendaController implements Serializable {
                  }
             }
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Erro ao inicializar: " + e.getMessage()));
+            if (FacesContext.getCurrentInstance() != null) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Erro ao inicializar: " + e.getMessage()));
+            }
         }
     }    public void novoAgendamento() {
         this.selectedClinicaId = null;
@@ -242,9 +236,10 @@ public class AgendaController implements Serializable {
                     new FacesMessage(FacesMessage.SEVERITY_INFO, "Info", "Não há médicos cadastrados para esta clínica"));
             }
             return medicosClinica != null ? medicosClinica : new ArrayList<>();
-        } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro ao buscar médicos da clínica", e.getMessage()));
+        } catch (Exception e) {            if (FacesContext.getCurrentInstance() != null) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro ao buscar médicos da clínica", e.getMessage()));
+            }
             return new ArrayList<>();
         }
     }
@@ -351,9 +346,14 @@ public class AgendaController implements Serializable {
 
  private void refreshAgendamentos() {
         try {
+            FacesContext facesContext = FacesContext.getCurrentInstance();
+            if (facesContext == null) {
+                // Se chamado fora do contexto JSF (ex: scheduler), não atualiza a lista
+                System.err.println("[DEBUG][AgendaController] refreshAgendamentos chamado fora do contexto JSF. Ignorando atualização de agendamentos.");
+                return;
+            }
             Collection<Agenda> agendamentos = agendaService.buscarTodosComRelacionamentos();
             Map<Long, Collection<Sala>> salasClinicaCache = new HashMap<>();
-            
             for (Agenda agenda : agendamentos) {
                 if (agenda.getSala() == null) {
                     try {
@@ -368,33 +368,28 @@ public class AgendaController implements Serializable {
                                 }
                             }
                         );
-                        
                         Sala sala = salasClinica.stream()
                             .filter(s -> s.getOrdem().equals(agenda.getNumeroSala()))
                             .findFirst()
                             .orElseThrow(() -> new BusinessException(
                                 "Sala " + agenda.getNumeroSala() + " não encontrada na clínica " + agenda.getClinica().getNome()));
-                        
                         agenda.setSala(sala);
-                        
                     } catch (Exception ex) {
                         System.err.println("Erro ao carregar sala para agendamento " + agenda.getId() + 
-                                         " (Clínica: " + agenda.getClinica().getId() + 
-                                         ", Sala: " + agenda.getNumeroSala() + "): " + ex.getMessage());
+                                         " (Clínica: " + agenda.getClinica().getId() + ", Sala: " + agenda.getNumeroSala() + "): " + ex.getMessage());
                     }
                 }
             }
-            
             List<Agenda> agendamentosFiltrados = agendamentos.stream()
                 .filter(a -> a.getSala() != null)
                 .collect(Collectors.toList());
-            
             this.consultasAgendadas = aplicarOrdenacao(agendamentosFiltrados);
-                
         } catch (Exception e) {
             this.consultasAgendadas = new ArrayList<>();
-            FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Erro ao carregar agendamentos: " + e.getMessage()));
+            if (FacesContext.getCurrentInstance() != null) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Erro ao carregar agendamentos: " + e.getMessage()));
+            }
         }
     }
 
@@ -403,17 +398,21 @@ public class AgendaController implements Serializable {
         
         try {
             if (selectedPaciente == null || selectedClinicaId == null || selectedSala == null || selectedMedico == null) {
-                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                    "Erro", "Todos os campos são obrigatórios"));
-                context.validationFailed();
+                if (context != null) {
+                    context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                        "Erro", "Todos os campos são obrigatórios"));
+                    context.validationFailed();
+                }
                 return;
             }
 
             updateSelectedDateTime();
             if (selectedData == null) {
-                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                    "Erro", "Selecione uma data e horário"));
-                context.validationFailed();
+                if (context != null) {
+                    context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                        "Erro", "Selecione uma data e horário"));
+                    context.validationFailed();
+                }
                 return;
             }
 
@@ -455,17 +454,23 @@ public class AgendaController implements Serializable {
             PrimeFaces.current().ajax().update(":datetimeForm:sala-panel");
             PrimeFaces.current().ajax().update(":datetimeForm:salas-indisponiveis-panel");
             
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, 
-                "Sucesso", "Agendamento realizado com sucesso"));
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, 
+                    "Sucesso", "Agendamento realizado com sucesso"));
+            }
 
         } catch (BusinessException e) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                "Erro de negócio", e.getMessage()));
-            context.validationFailed();
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                    "Erro de negócio", e.getMessage()));
+                context.validationFailed();
+            }
         } catch (Exception e) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                "Erro", "Erro ao realizar agendamento: " + e.getMessage()));
-            context.validationFailed();
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                    "Erro", "Erro ao realizar agendamento: " + e.getMessage()));
+                context.validationFailed();
+            }
         }
     }
 
@@ -493,8 +498,10 @@ public class AgendaController implements Serializable {
             
             refreshAgendamentos();
             
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, 
-                "Sucesso", "Consulta finalizada com sucesso"));
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, 
+                    "Sucesso", "Consulta finalizada com sucesso"));
+            }
             verificarMedicosIndisponiveisEmTempoReal();
             verificarPacientesIndisponiveisEmTempoReal();
             verificarSalasIndisponiveisEmTempoReal();
@@ -503,11 +510,15 @@ public class AgendaController implements Serializable {
             PrimeFaces.current().ajax().update("scheduleForm:medico");
             PrimeFaces.current().ajax().update("scheduleForm:paciente");
         } catch (BusinessException e) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                "Erro", "Erro ao finalizar consulta: " + e.getMessage()));
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                    "Erro", "Erro ao finalizar consulta: " + e.getMessage()));
+            }
         } catch (Exception e) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                "Erro", "Erro inesperado ao finalizar consulta"));
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                    "Erro", "Erro inesperado ao finalizar consulta"));
+            }
         }
     }
 
@@ -533,33 +544,56 @@ public class AgendaController implements Serializable {
             PrimeFaces.current().ajax().update("scheduleForm:medico");
             PrimeFaces.current().ajax().update("scheduleForm:paciente");
         } catch (BusinessException e) {
-            context.validationFailed();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                "Erro", "Erro ao cancelar consulta: " + e.getMessage()));
+            if (context != null) {
+                context.validationFailed();
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                    "Erro", "Erro ao cancelar consulta: " + e.getMessage()));
+            }
         } catch (Exception e) {
-            context.validationFailed();
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                "Erro", "Erro inesperado ao cancelar consulta"));
+            if (context != null) {
+                context.validationFailed();
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                    "Erro", "Erro inesperado ao cancelar consulta"));
+            }
         }
     }   
     
     public void excluirConsulta(Agenda consulta) {
         FacesContext context = FacesContext.getCurrentInstance();
         try {
+            System.out.println("=== EXCLUINDO CONSULTA ===");
+            System.out.println("ID da consulta: " + consulta.getId());
+            System.out.println("Paciente: " + consulta.getPaciente().getNome());
+            System.out.println("Médico: " + consulta.getMedico().getNome());
+            System.out.println("Data/Hora: " + consulta.getDataHora());
+            
             agendaService.excluirAgendamento(consulta.getId());
             
-            Collection<Agenda> currentAgendamentos = agendaService.buscarTodosComRelacionamentos();
-            this.consultasAgendadas = new ArrayList<>(currentAgendamentos);
-            this.consultasAgendadas.sort((a1, a2) -> a2.getDataHora().compareTo(a1.getDataHora()));
+            System.out.println("Consulta excluída com sucesso no service");
             
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, 
-                "Sucesso", "Consulta excluída com sucesso"));
+            // Atualiza a lista de consultas
+            refreshAgendamentos();
+            
+            System.out.println("Lista de consultas atualizada");
+            
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, 
+                    "Sucesso", "Consulta excluída com sucesso"));
+            }
         } catch (BusinessException e) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                "Erro", "Erro ao excluir consulta: " + e.getMessage()));
+            System.err.println("BusinessException ao excluir consulta: " + e.getMessage());
+            e.printStackTrace();
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                    "Erro", "Erro ao excluir consulta: " + e.getMessage()));
+            }
         } catch (Exception e) {
-            context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                "Erro", "Erro inesperado ao excluir consulta"));
+            System.err.println("Exception geral ao excluir consulta: " + e.getMessage());
+            e.printStackTrace();
+            if (context != null) {
+                context.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                    "Erro", "Erro inesperado ao excluir consulta: " + e.getMessage()));
+            }
         }
     }
     
@@ -757,9 +791,11 @@ public void verificarMedicosIndisponiveisEmTempoReal() {
             PrimeFaces.current().ajax().update(":datetimeForm:medicos-indisponiveis-panel");
             PrimeFaces.current().ajax().update(":datetimeForm:medico-panel"); // Atualiza também o autocomplete
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                    "Erro", "Erro ao verificar disponibilidade dos médicos: " + e.getMessage()));
+            if (FacesContext.getCurrentInstance() != null) {
+                FacesContext.getCurrentInstance().addMessage(null, 
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                        "Erro", "Erro ao verificar disponibilidade dos médicos: " + e.getMessage()));
+            }
             this.medicosIndisponiveisNomes = new ArrayList<>();
         }
     }   
@@ -817,9 +853,11 @@ public void verificarMedicosIndisponiveisEmTempoReal() {
         } catch (Exception e) {
             System.err.println("verificarPacientesIndisponiveisEmTempoReal - Erro: " + e.getMessage());
             e.printStackTrace();
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                    "Erro", "Erro ao verificar disponibilidade dos pacientes: " + e.getMessage()));
+            if (FacesContext.getCurrentInstance() != null) {
+                FacesContext.getCurrentInstance().addMessage(null, 
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                        "Erro", "Erro ao verificar disponibilidade dos pacientes: " + e.getMessage()));
+            }
             this.pacientesIndisponiveisNomes = new ArrayList<>();
         }
     }
@@ -885,9 +923,11 @@ public void verificarSalasIndisponiveisEmTempoReal() {
         } catch (Exception e) {
             System.err.println("verificarSalasIndisponiveisEmTempoReal - Erro: " + e.getMessage());
             e.printStackTrace();
-            FacesContext.getCurrentInstance().addMessage(null, 
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                    "Erro", "Erro ao verificar disponibilidade das salas: " + e.getMessage()));
+            if (FacesContext.getCurrentInstance() != null) {
+                FacesContext.getCurrentInstance().addMessage(null, 
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                        "Erro", "Erro ao verificar disponibilidade das salas: " + e.getMessage()));
+            }
             this.salasIndisponiveisNomes = new ArrayList<>();
         }
     }
@@ -1882,13 +1922,17 @@ public void verificarDisponibilidadeSalaEmTempoReal() {
         return dynamicEditSala;
     }
 
-     private String gerarHashAgendamentos() {
+    private String gerarHashAgendamentos() {
         try {
+            FacesContext facesContext = FacesContext.getCurrentInstance();
+            if (facesContext == null) {
+                // Se chamado fora do contexto JSF (ex: scheduler), retorna hash vazio
+                return "empty";
+            }
             Collection<Agenda> agendamentos = agendaService.buscarTodosComRelacionamentos();
             if (agendamentos == null || agendamentos.isEmpty()) {
                 return "empty";
             }
-            
             StringBuilder hashBuilder = new StringBuilder();
             agendamentos.stream()
                 .sorted((a1, a2) -> a1.getId().compareTo(a2.getId()))
@@ -1902,9 +1946,7 @@ public void verificarDisponibilidadeSalaEmTempoReal() {
                               .append(agenda.getDataHoraFim())
                               .append("|");
                 });
-            
             return String.valueOf(hashBuilder.toString().hashCode());
-            
         } catch (Exception e) {
             System.err.println("Erro ao gerar hash dos agendamentos: " + e.getMessage());
             return "error";
@@ -1946,7 +1988,7 @@ public void verificarDisponibilidadeSalaEmTempoReal() {
                 refreshAgendamentos();
                 
                 if (FacesContext.getCurrentInstance() != null) {
-                    PrimeFaces.current().ajax().update(":agendaTable");
+                    PrimeFaces.current().ajax().update(":consultasForm:consultasTable");
                     PrimeFaces.current().ajax().update(":datetimeForm:datetime-panel");
                     PrimeFaces.current().ajax().update(":datetimeForm:medico-panel");
                     PrimeFaces.current().ajax().update(":datetimeForm:clinica-panel");
@@ -1955,18 +1997,19 @@ public void verificarDisponibilidadeSalaEmTempoReal() {
                     PrimeFaces.current().ajax().update(":datetimeForm:pacientes-indisponiveis-panel");
                     PrimeFaces.current().ajax().update(":datetimeForm:sala-panel");
                     PrimeFaces.current().ajax().update(":datetimeForm:salas-indisponiveis-panel");
+                    FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_INFO, 
+                            "Atualização Automática", "Lista de agendamentos atualizada automaticamente"));
                 }
-                
-                FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_INFO, 
-                        "Atualização Automática", "Lista de agendamentos atualizada automaticamente"));
             }
             
         } catch (Exception e) {
             System.err.println("Erro ao verificar mudanças e atualizar: " + e.getMessage());
-            FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, 
-                    "Erro", "Erro ao verificar mudanças: " + e.getMessage()));
+            if (FacesContext.getCurrentInstance() != null) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                        "Erro", "Erro ao verificar mudanças: " + e.getMessage()));
+            }
         }
     }
     
@@ -2082,8 +2125,10 @@ public void verificarDisponibilidadeSalaEmTempoReal() {
             try {
                 usuarioService.alterar(usuarioLogado); // salva no banco
             } catch (br.com.cesarsants.exceptions.TipoChaveNaoEncontradaException | br.com.cesarsants.exceptions.DAOException e) {
-                FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro ao salvar preferência", e.getMessage()));
+                if (FacesContext.getCurrentInstance() != null) {
+                    FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro ao salvar preferência", e.getMessage()));
+                }
             }
         }
         System.out.println("==========================================");
@@ -2092,8 +2137,10 @@ public void verificarDisponibilidadeSalaEmTempoReal() {
         // Obtém o usuário logado
         usuarioLogado = getUsuarioLogado();
         if (usuarioLogado == null) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Usuário não autenticado"));
+            if (FacesContext.getCurrentInstance() != null) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Erro", "Usuário não autenticado"));
+            }
             return;
         }
         
@@ -2129,7 +2176,6 @@ public void verificarDisponibilidadeSalaEmTempoReal() {
         
         if (FacesContext.getCurrentInstance() != null) {
             PrimeFaces.current().ajax().update("toggleForm:toggleButton toggleForm:statusMessage pollingForm");
-            
             if (novoEstado) {
                 PrimeFaces.current().executeScript("PF('poll').start();");
             } else {

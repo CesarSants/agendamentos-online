@@ -1,15 +1,49 @@
+# Arquivos de configuração sensíveis
 src/main/resources/email-config.properties
-src/main/resources/db-prod.properties 
+src/main/resources/database-config.properties
+src/main/resources/database-config-local.properties
 
+# Arquivos do Maven
 target/
-*.war
-*.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
 
+# Arquivos do Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
 .settings/
-.project
-.classpath
+.loadpath
+.recommenders
 
+# Arquivos do IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Arquivos do VS Code
+.vscode/
+
+# Logs
 *.log
 
+# Arquivos temporários
 *.tmp
-*.temp 
+*.temp
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db 

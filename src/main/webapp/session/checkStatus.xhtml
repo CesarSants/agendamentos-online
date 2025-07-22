@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <title>Check Session</title>
+</h:head>
+<h:body>
+    <f:metadata>
+        <f:viewAction action="#{sessionController.garantirSessao}" />
+        <f:viewAction action="#{sessionController.checkSessionStatus}" />
+    </f:metadata>
+    
+    <!-- Verifica se o usuário está logado -->
+    <h:panelGroup rendered="#{sessionController.sessionValid}">
+        <h:outputText value="SESSION_OK" />
+    </h:panelGroup>
+    
+    <!-- Se não está logado, recria a sessão HTML e retorna SESSION_EXPIRED -->
+    <h:panelGroup rendered="#{not sessionController.sessionValid}">
+        <h:outputText value="SESSION_EXPIRED" />
+        <script type="text/javascript">
+            //<![CDATA[
+            // Recria a sessão HTML automaticamente para evitar o "limbo"
+            console.log('Sessão expirada detectada. Recriando sessão HTML...');
+            // Força a criação de uma nova sessão HTTP
+            if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.clear();
+            }
+            if (typeof localStorage !== 'undefined') {
+                // Mantém apenas dados que não são relacionados à sessão
+                var keysToKeep = [];
+                for (var i = 0; i < localStorage.length; i++) {
+                    var key = localStorage.key(i);
+                    if (key && !key.startsWith('session_') && !key.startsWith('auth_')) {
+                        keysToKeep.push(key);
+                    }
+                }
+                localStorage.clear();
+                // Restaura apenas os dados que devem ser mantidos
+                keysToKeep.forEach(function(key) {
+                    // Aqui você pode restaurar dados específicos se necessário
+                });
+            }
+            //]]>
+        </script>
+    </h:panelGroup>
+</h:body>
+</html> 

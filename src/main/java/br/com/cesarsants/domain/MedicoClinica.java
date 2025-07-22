@@ -10,11 +10,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-/**
- * @author cesarsants
- *
- */
-
 @Entity
 @Table(name = "TB_MEDICO_CLINICA")
 public class MedicoClinica implements Persistente {
