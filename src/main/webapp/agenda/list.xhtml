@@ -171,6 +171,21 @@
             margin: 8px;
         }
         
+        .agenda-table-wrapper {
+            width: 100%;
+        }
+        
+        .agenda-table-wrapper .ui-datatable-tablewrapper {
+            width: 100% !important;
+        }
+        .agenda-table-wrapper .ui-datatable-scrollable-body {
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            touch-action: pan-x pan-y !important;
+            -webkit-overflow-scrolling: touch !important;
+            max-height: 70dvh !important;
+        }
+        
         
 
         
@@ -424,12 +439,6 @@
                 max-height: 90vh !important;
                 overflow-y: auto;
             }
-            
-            /* Tabelas em telas baixas */
-            .ui-datatable {
-                max-height: 50vh;
-                overflow-y: auto;
-            }
         }
         
         /* Resto do CSS existente permanece inalterado */
@@ -584,7 +593,7 @@
                         <p:panelGrid columns="2" layout="grid" styleClass="ui-fluid">
                             <p:outputLabel for="clinica" value="Clínica:" />
                             <p:selectOneMenu id="clinica" value="#{agendaController.selectedClinicaId}" 
-                                           required="true">
+                                           required="true" style="width: 100%;">
                                 <f:selectItem itemLabel="Selecione uma clínica" itemValue="" />
                                 <f:selectItems value="#{agendaController.clinicas}" 
                                              var="clinica" 
@@ -780,15 +789,16 @@
                                 <p:commandButton id="toggleButton"
                                                value="#{agendaController.sistemaAtualizacaoAtivo ? 'Desativar' : 'Ativar'} Sistema"
                                                action="#{agendaController.toggleSistemaAtualizacao}"
-                                               update="@form"
+                                               update="pollPanel statusMessage toggleButton"
                                                styleClass="#{agendaController.sistemaAtualizacaoAtivo ? 'ui-button-danger' : 'ui-button-success'}"
                                                style="width: auto;" />
-                                               
-                                <div id="statusMessage" 
-                                     style="padding: 8px 12px; border-radius: 4px; #{agendaController.sistemaAtualizacaoAtivo ? 'background-color: #c8e6c9;' : 'background-color: #ffcdd2;'}">
-                                    <h:outputText value="#{agendaController.sistemaAtualizacaoAtivo ? 'Sistema de atualização automática ATIVO' : 'Sistema de atualização automática INATIVO'}"
-                                                style="#{agendaController.sistemaAtualizacaoAtivo ? 'color: #2e7d32;' : 'color: #c62828;'}" />
-                                </div>
+                                <h:panelGroup id="statusMessage">
+                                    <div 
+                                         style="padding: 8px 12px; border-radius: 4px; #{agendaController.sistemaAtualizacaoAtivo ? 'background-color: #c8e6c9;' : 'background-color: #ffcdd2;'}">
+                                        <h:outputText value="#{agendaController.sistemaAtualizacaoAtivo ? 'Sistema de atualização automática ATIVO' : 'Sistema de atualização automática INATIVO'}"
+                                                    style="#{agendaController.sistemaAtualizacaoAtivo ? 'color: #2e7d32;' : 'color: #c62828;'}" />
+                                    </div>
+                                </h:panelGroup>
                             </div>
                         </div>
                     </h:form>
@@ -923,7 +933,8 @@
                 <!-- Lista de Consultas -->
                 <p:panel header="Consultas Agendadas" styleClass="schedule-panel">
                     <h:form id="consultasForm">                        
-                        <p:dataTable id="consultasTable" 
+                        <div class="agenda-table-wrapper">
+                            <p:dataTable id="consultasTable" 
                                 widgetVar="consultasTable"
                                 var="consulta" 
                                 value="#{agendaController.agendasFiltradas}"
@@ -1017,8 +1028,9 @@
                                 </div>
                             </p:column>
                         </p:dataTable>
-                    </h:form>
-                </p:panel>
+                    </div>
+                </h:form>
+            </p:panel>
             </div>
         </div>
     </p:panel>
@@ -1213,19 +1225,21 @@
     </p:confirmDialog>
 
     <!-- Polling automático para verificar mudanças nos agendamentos -->
-	<h:panelGrid rendered="#{agendaController.sistemaAtualizacaoAtivo}">
-	    <h:form id="pollingForm">
-	       <p:poll interval="60"
-	               widgetVar="poll"
-	               listener="#{agendaController.verificarMudancasEAtualizar}"
-	               update=":consultasForm:consultasTable"
-	               autoStart="true"
-	               global="false"
-	               async="true"
-	               onstart="window.isSystemPolling = true; console.log('Polling iniciado');"
-	               oncomplete="window.isSystemPolling = false; console.log('Polling completado');" />
-	    	</h:form>
-	</h:panelGrid>
+<h:panelGroup id="pollPanel">
+    <h:panelGrid rendered="#{agendaController.sistemaAtualizacaoAtivo}">
+        <h:form id="pollingForm">
+            <p:poll interval="60"
+                    widgetVar="poll"
+                    listener="#{agendaController.verificarMudancasEAtualizar}"
+                    update=":consultasForm:consultasTable"
+                    autoStart="true"
+                    global="false"
+                    async="true"
+                    onstart="window.isSystemPolling = true; console.log('Polling iniciado');"
+                    oncomplete="window.isSystemPolling = false; console.log('Polling completado');" />
+        </h:form>
+    </h:panelGrid>
+</h:panelGroup>
     
     <!-- Loaders específicos por ação -->
     <!-- Loader para agendar consulta -->

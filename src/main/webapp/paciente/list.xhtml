@@ -147,6 +147,22 @@
             justify-content: center;
         }
         
+        
+        .paciente-table-wrapper{
+            width: 100%;
+        }
+        
+        .paciente-table-wrapper .ui-datatable-tablewrapper {
+            width: 100% !important;
+        }
+        .paciente-table-wrapper .ui-datatable-scrollable-body {
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            touch-action: pan-x pan-y !important;
+            -webkit-overflow-scrolling: touch !important;
+            max-height: 70dvh !important;
+        }
+        
         /* Media Queries para Responsividade */
         @media screen and (max-width: 1024px) {
             .search-input-container {
@@ -189,8 +205,9 @@
                 display: block !important;
             }
             .ui-datatable-scrollable-body > table {
+                width: 100% !important;
                 min-width: 800px !important;
-                width: max-content !important;
+                table-layout: auto !important;
             }
             /* Dialogs responsivos */
             .ui-dialog, .ui-dialog .ui-dialog-content {
@@ -484,6 +501,7 @@
         </h:form>
 
         <h:form id="listForm">
+        <div class="paciente-table-wrapper">
             <p:dataTable id="pacientesTable" var="paciente" value="#{pacienteController.pacientesExibidos}"
                          lazy="false"
                          emptyMessage="Nenhum paciente encontrado" rows="10" paginator="true"
@@ -536,6 +554,7 @@
                                    oncomplete="hideLoaderExcluir()"/>
                 </p:column>
             </p:dataTable>
+        </div>
         </h:form>
 
         <!-- Dialog para Novo Paciente -->

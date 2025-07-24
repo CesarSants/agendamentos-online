@@ -6,19 +6,32 @@
     <title>Recuperar Senha</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            background-attachment: fixed;
-            background-size: cover;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-            overflow: hidden;
+    	body {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			background-attachment: fixed;
+			background-size: cover;
+			margin: 0;
+			padding: 0;
+			width: 100dvw;
+			height: 100dvh;
+			min-height: 100dvh;
+			min-width: 100dvw;
+			overflow: hidden;
+		}
+    	
+        .body {
+            width: 100dvw;
+			height: 100dvh;
+			min-height: 100dvh;
+			min-width: 100dvw;
+			overflow-y: auto;
+			background: transparent;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			box-sizing: border-box;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
         }
         .recuperar-container {
             background: white;
@@ -30,7 +43,7 @@
             text-align: center;
             position: relative;
             margin: auto;
-            max-height: 90vh;
+            max-height: 90dvh;
             overflow-y: auto;
             box-sizing: border-box;
             scrollbar-width: thin;
@@ -118,9 +131,14 @@
             background: #667eea;
             color: #fff;
         }
+        body.no-scroll {
+			overflow-y: hidden !important;
+			overflow-x: hidden !important;
+		}
     </style>
 </h:head>
 <h:body>
+	<div class="body">
     <div class="recuperar-container">
         <p:button outcome="/index" styleClass="btn-back" icon="pi pi-arrow-left" />
         <div class="recuperar-header">
@@ -149,11 +167,13 @@
         var btn = document.getElementById(btnId);
         if (btn) btn.disabled = true;
         PF('globalLoader').show();
+        document.body.classList.add('no-scroll');
     }
     function hideLoaderAndEnable(btnId) {
         var btn = document.getElementById(btnId);
         if (btn) btn.disabled = false;
         PF('globalLoader').hide();
+        document.body.classList.remove('no-scroll');
     }
     </h:outputScript>
     
@@ -175,10 +195,12 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		height: 100vh;
-		width: 100vw;
+		height: 100dvh;
+		width: 100dvw;
 		overflow: hidden;
 		pointer-events: auto !important;
+		left: 0;
+    	top: 0;
 	}
 	
 	.ui-widget-content{
@@ -211,5 +233,6 @@
 		text-shadow: 0 2px 8px #667eea44, 0 0 2px #764ba2;
 	}
     </h:outputStylesheet>
+    </div>
 </h:body>
 </html> 

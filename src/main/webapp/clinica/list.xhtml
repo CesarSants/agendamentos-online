@@ -164,6 +164,21 @@
         }
         
         
+        .clinica-table-wrapper{
+            width: 100%;
+        }
+        
+        .clinica-table-wrapper .ui-datatable-tablewrapper {
+            width: 100% !important;
+        }
+        .clinica-table-wrapper .ui-datatable-scrollable-body {
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            touch-action: pan-x pan-y !important;
+            -webkit-overflow-scrolling: touch !important;
+            max-height: 70dvh !important;
+        }
+        
         
 
         
@@ -506,12 +521,6 @@
                 max-height: 90vh !important;
                 overflow-y: auto;
             }
-            
-            /* Gerenciadores em telas baixas */
-            .ui-dialog .ui-datatable {
-                max-height: 50vh;
-                overflow-y: auto;
-            }
         }
         
 
@@ -608,7 +617,9 @@
             </p:toolbar>
         </h:form>
 
-        <h:form id="listForm">            <p:dataTable id="clinicasTable" var="clinica" value="#{clinicaController.clinicasExibidas}"
+        <h:form id="listForm">
+        <div class="clinica-table-wrapper">            
+        <p:dataTable id="clinicasTable" var="clinica" value="#{clinicaController.clinicasExibidas}"
                          lazy="false"
                          emptyMessage="Nenhuma clínica encontrada" rows="10" paginator="true"
                          paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} 
@@ -675,6 +686,7 @@
                         oncomplete="hideLoaderExcluir()"/>
                 </p:column>
             </p:dataTable>
+            </div>
         </h:form>
 
         <!-- Dialog para Nova Clínica -->

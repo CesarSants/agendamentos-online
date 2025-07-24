@@ -147,8 +147,33 @@
             margin: 8px;
         }
         
+        .medico-table-wrapper{
+            width: 100%;
+        }
         
+        .medico-table-wrapper .ui-datatable-tablewrapper {
+            width: 100% !important;
+        }
+        .medico-table-wrapper .ui-datatable-scrollable-body {
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            touch-action: pan-x pan-y !important;
+            -webkit-overflow-scrolling: touch !important;
+            max-height: 70dvh !important;
+        }
 
+        .medico-table-wrapper .ui-datatable-scrollable-header > table,
+        .medico-table-wrapper .ui-datatable-scrollable-body > table {
+            min-width: 540px !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+        .medico-table-wrapper .ui-datatable .ui-datatable-header th,
+        .medico-table-wrapper .ui-datatable .ui-datatable-data td {
+            min-width: 135px !important;
+            width: 135px !important;
+            box-sizing: border-box !important;
+        }
         
         /* Media Queries para Responsividade */
         @media screen and (max-width: 1024px) {
@@ -192,8 +217,9 @@
                 display: block !important;
             }
             .ui-datatable-scrollable-body > table {
+                width: 100% !important;
                 min-width: 800px !important;
-                width: max-content !important;
+                table-layout: auto !important;
             }
             /* Dialogs responsivos */
             .ui-dialog, .ui-dialog .ui-dialog-content {
@@ -301,7 +327,7 @@
             }
             
             .ui-datatable table {
-                min-width: 675px; /* 135px * 5 colunas */
+                min-width: 635px; /* 135px * 5 colunas */
             }
             
             .ui-datatable .ui-datatable-data td,
@@ -408,6 +434,14 @@
         
         /* Resto do CSS existente permanece inalterado */
     </h:outputStylesheet>
+    <style>
+.medico-table-wrapper .ui-datatable-scrollable-header > table,
+.medico-table-wrapper .ui-datatable-scrollable-body > table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    min-width: 555px !important;
+}
+</style>
 </h:head>
 <h:body>
     <!-- Loader global -->
@@ -480,6 +514,7 @@
         </h:form>
 
         <h:form id="listForm">
+        <div class="medico-table-wrapper">
             <p:dataTable id="medicosTable" var="medico" value="#{medicoController.medicosExibidos}"
             			 lazy="false"
                          emptyMessage="Nenhum médico encontrado" rows="10" paginator="true"
@@ -488,6 +523,12 @@
                          currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords} registros"
                          rowsPerPageTemplate="5,10,15"
                          scrollable="true" scrollWidth="100%">
+                <f:facet name="colgroup">
+                    <col style="width:135px" />
+                    <col style="width:135px" />
+                    <col style="width:135px" />
+                    <col style="width:150px" />
+                </f:facet>
                 
                 <p:column headerText="Nome" width="135">
                     <h:outputText value="#{medico.nome}" />
@@ -524,6 +565,7 @@
                                    oncomplete="hideLoaderExcluir()"/>
                 </p:column>
             </p:dataTable>
+        </div>
         </h:form>
 
         <!-- Dialog para Novo Médico -->
